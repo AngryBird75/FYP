@@ -1,0 +1,598 @@
+﻿@model AspiraHub.ViewModels.OnboardingStep1VM
+@{
+    ViewData["Title"] = "Education Level";
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
+}
+
+<style>
+    canvas#stepBg {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    /* Floating emoji elements */
+    .floaters {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 1;
+        overflow: hidden;
+    }
+
+    .floater {
+        position: absolute;
+        font-size: 1.6rem;
+        opacity: 0;
+        animation: floatUp linear infinite;
+        user-select: none;
+    }
+
+    @@keyframes floatUp {
+        0% {
+            opacity: 0;
+            transform: translateY(100vh) rotate(0deg) scale(0.8);
+        }
+
+        10% {
+            opacity: .75;
+        }
+
+        80% {
+            opacity: .5;
+        }
+
+        100% {
+            opacity: 0;
+            transform: translateY(-12vh) rotate(360deg) scale(1.1);
+        }
+    }
+
+    /* Orbiting ring top right */
+    .orbit-wrap {
+        position: fixed;
+        top: -80px;
+        right: -80px;
+        width: 320px;
+        height: 320px;
+        pointer-events: none;
+        z-index: 1;
+        animation: spinSlow 18s linear infinite;
+    }
+
+    @@keyframes spinSlow {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .orbit-wrap svg {
+        width: 100%;
+        height: 100%;
+    }
+
+    /* Bottom left deco */
+    .deco-bl {
+        position: fixed;
+        bottom: -60px;
+        left: -60px;
+        width: 260px;
+        height: 260px;
+        pointer-events: none;
+        z-index: 1;
+        animation: spinSlow 24s linear infinite reverse;
+    }
+
+    /* Scroll banner */
+    .edu-banner {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        overflow: hidden;
+        height: 36px;
+        background: rgba(108,110,245,0.08);
+        border-top: 1px solid rgba(108,110,245,0.15);
+        z-index: 2;
+        pointer-events: none;
+    }
+
+    .banner-track {
+        display: inline-flex;
+        gap: 2.5rem;
+        white-space: nowrap;
+        animation: marquee 22s linear infinite;
+        padding-top: 7px;
+        font-size: 13px;
+        color: rgba(168,158,248,0.7);
+    }
+
+    @@keyframes marquee {
+        from {
+            transform: translateX(0)
+        }
+
+        to {
+            transform: translateX(-50%);
+        }
+    }
+
+    /* CARD */
+    .onboarding-card {
+        position: relative;
+        z-index: 5;
+        background: rgba(10,10,30,0.82);
+        backdrop-filter: blur(22px);
+        border: 1px solid rgba(108,110,245,0.28);
+        border-radius: 26px;
+        padding: 2.4rem 2.2rem 2rem;
+        max-width: 480px;
+        width: 100%;
+        margin: auto;
+        box-shadow: 0 8px 48px rgba(108,110,245,0.18),0 0 0 1px rgba(255,255,255,0.04);
+        animation: cardIn .65s cubic-bezier(.4,0,.2,1) both;
+    }
+
+    @@keyframes cardIn {
+        from {
+            opacity: 0;
+            transform: translateY(32px) scale(0.96);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    /* Progress bar row */
+    .step-prog {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 1.4rem;
+        animation: fadeUp .4s .05s both;
+    }
+
+    .prog-dot {
+        height: 5px;
+        border-radius: 4px;
+        flex: 1;
+        background: rgba(108,110,245,0.18);
+        transition: background .4s;
+    }
+
+        .prog-dot.active {
+            background: linear-gradient(90deg,#6c6ef5,#f56cc8);
+        }
+
+        .prog-dot.done {
+            background: #6c6ef5;
+        }
+
+    /* Badge */
+    .step-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(108,110,245,0.13);
+        border: 1px solid rgba(108,110,245,0.3);
+        border-radius: 20px;
+        padding: 4px 14px;
+        font-size: 12px;
+        color: #a89ef8;
+        margin-bottom: .75rem;
+        animation: fadeUp .4s .1s both;
+    }
+
+    /* Title */
+    .onboard-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #e8e8ff;
+        margin-bottom: 1.5rem;
+        line-height: 1.3;
+        animation: fadeUp .4s .18s both;
+    }
+
+        .onboard-title span {
+            color: #6c6ef5;
+        }
+
+    /* Option cards */
+    .option-list {
+        display: flex;
+        flex-direction: column;
+        gap: .9rem;
+        margin-bottom: 1.3rem;
+    }
+
+    .option-card {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 1.2rem;
+        border-radius: 16px;
+        border: 1.5px solid rgba(108,110,245,0.18);
+        background: rgba(20,20,55,0.55);
+        cursor: pointer;
+        transition: border-color .25s,background .25s,transform .22s,box-shadow .25s;
+        position: relative;
+        overflow: hidden;
+        animation: fadeUp .45s both;
+    }
+
+        .option-card:nth-child(1) {
+            animation-delay: .22s;
+        }
+
+        .option-card:nth-child(2) {
+            animation-delay: .32s;
+        }
+
+        .option-card:nth-child(3) {
+            animation-delay: .42s;
+        }
+
+        /* shimmer sweep */
+        .option-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(110deg,transparent 25%,rgba(108,110,245,0.09) 50%,transparent 75%);
+            transform: translateX(-100%);
+            transition: transform .5s;
+        }
+
+        .option-card:hover::before {
+            transform: translateX(100%);
+        }
+
+        .option-card:hover {
+            border-color: rgba(108,110,245,0.55);
+            background: rgba(108,110,245,0.1);
+            transform: translateX(7px) scale(1.01);
+            box-shadow: 0 4px 22px rgba(108,110,245,0.22);
+        }
+
+        .option-card:has(input:checked) {
+            border-color: #6c6ef5;
+            background: rgba(108,110,245,0.16);
+            transform: translateX(7px) scale(1.01);
+            box-shadow: 0 0 0 3px rgba(108,110,245,0.22),0 6px 24px rgba(108,110,245,0.28);
+        }
+
+        .option-card input[type="radio"] {
+            display: none;
+        }
+
+    /* radio circle */
+    .radio-dot {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid rgba(108,110,245,0.35);
+        margin-left: auto;
+        flex-shrink: 0;
+        transition: all .25s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .option-card:has(input:checked) .radio-dot {
+        background: #6c6ef5;
+        border-color: #6c6ef5;
+        box-shadow: 0 0 12px rgba(108,110,245,0.7);
+    }
+
+        .option-card:has(input:checked) .radio-dot::after {
+            content: '✓';
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+    .option-icon {
+        font-size: 1.7rem;
+        transition: transform .3s;
+    }
+
+    .option-card:hover .option-icon,
+    .option-card:has(input:checked) .option-icon {
+        transform: scale(1.25) rotate(-8deg);
+    }
+
+    .option-name {
+        font-size: 15px;
+        font-weight: 600;
+        color: #e8e8ff;
+        flex: 1;
+    }
+
+    .option-sub {
+        font-size: 11px;
+        color: #8888bb;
+        display: block;
+        margin-top: 2px;
+        font-weight: 400;
+    }
+
+    /* error */
+    .field-error {
+        display: block;
+        font-size: 12px;
+        color: #f56cc8;
+        margin-bottom: .6rem;
+        min-height: 1.1em;
+    }
+
+    /* Button */
+    .btn-full {
+        width: 100%;
+        padding: 13px;
+        border-radius: 40px;
+        border: none;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        background: linear-gradient(135deg,#6c6ef5,#f56cc8);
+        color: #fff;
+        box-shadow: 0 4px 22px rgba(108,110,245,0.38);
+        transition: transform .2s,box-shadow .2s;
+        position: relative;
+        overflow: hidden;
+        animation: fadeUp .45s .5s both;
+    }
+
+        .btn-full::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(110deg,transparent 25%,rgba(255,255,255,0.14) 50%,transparent 75%);
+            transform: translateX(-100%);
+            transition: transform .55s;
+        }
+
+        .btn-full:hover::after {
+            transform: translateX(100%);
+        }
+
+        .btn-full:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(245,108,200,0.48);
+        }
+
+        .btn-full:active {
+            transform: scale(0.98);
+        }
+
+    @@keyframes fadeUp {
+        from {
+            opacity: 0;
+            transform: translateY(18px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* ripple */
+    @@keyframes ripple {
+        to {
+            transform: scale(1);
+            opacity: 0;
+        }
+    }
+
+    /* particle */
+    .particle {
+        position: fixed;
+        pointer-events: none;
+        z-index: 1;
+        border-radius: 50%;
+        animation: pFloat linear infinite;
+    }
+
+    @@keyframes pFloat {
+        0% {
+            transform: translateY(100vh) scale(0);
+            opacity: 0;
+        }
+
+        15% {
+            opacity: .5;
+        }
+
+        85% {
+            opacity: .25;
+        }
+
+        100% {
+            transform: translateY(-8vh) scale(1);
+            opacity: 0;
+        }
+    }
+</style>
+
+<canvas id="stepBg"></canvas>
+
+<!-- Floating university emojis -->
+<div class="floaters" id="floaters"></div>
+
+<!-- Orbiting deco top-right -->
+<div class="orbit-wrap">
+    <svg viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="160" cy="160" r="140" stroke="rgba(108,110,245,0.12)" stroke-width="1" stroke-dasharray="8 6" />
+        <circle cx="160" cy="160" r="100" stroke="rgba(245,108,200,0.1)" stroke-width="1" stroke-dasharray="4 8" />
+        <circle cx="160" cy="20" r="6" fill="#6c6ef5" opacity=".6" />
+        <circle cx="300" cy="160" r="5" fill="#f56cc8" opacity=".5" />
+        <circle cx="160" cy="300" r="4" fill="#23e8c8" opacity=".4" />
+        <text x="148" y="28" font-size="14" opacity=".5">🎓</text>
+        <text x="288" y="168" font-size="12" opacity=".4">📚</text>
+    </svg>
+</div>
+
+<!-- Deco bottom-left -->
+<div class="deco-bl">
+    <svg viewBox="0 0 260 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="130" cy="130" r="110" stroke="rgba(35,232,200,0.1)" stroke-width="1" stroke-dasharray="6 8" />
+        <circle cx="130" cy="130" r="70" stroke="rgba(108,110,245,0.08)" stroke-width="1" stroke-dasharray="3 6" />
+        <circle cx="130" cy="20" r="5" fill="#23e8c8" opacity=".4" />
+        <circle cx="240" cy="130" r="4" fill="#6c6ef5" opacity=".35" />
+        <text x="118" y="28" font-size="13" opacity=".4">🏫</text>
+    </svg>
+</div>
+
+<!-- Scrolling banner -->
+<div class="edu-banner">
+    <div class="banner-track" id="bannerTrack"></div>
+</div>
+
+<div class="auth-card onboarding-card">
+
+    @Html.Partial("_StepBar", 1)
+
+    <!-- Progress dots -->
+    <div class="step-prog">
+        <div class="prog-dot active"></div>
+        <div class="prog-dot"></div>
+        <div class="prog-dot"></div>
+        <div class="prog-dot"></div>
+        <div class="prog-dot"></div>
+    </div>
+
+    <p class="step-badge">🎓 Step 1 of 5</p>
+    <h2 class="onboard-title">What is your <span>education level?</span></h2>
+
+    <form asp-action="Step1" method="post" class="auth-form">
+        @Html.AntiForgeryToken()
+
+        <div class="option-list">
+            @foreach (var (level, icon, sub) in new[]{
+                ("Intermediate","📗","FSc / A-Levels / Equivalent"),
+                ("Undergraduate","🎓","BS / BCS / BBA / Equivalent"),
+                ("Graduate","🏅","MS / MBA / PhD / Equivalent")
+            })
+            {
+                <label class="option-card">
+                    <input type="radio" asp-for="EducationLevel" value="@level" />
+                    <span class="option-icon">@icon</span>
+                    <span class="option-name">
+                        @level
+                        <span class="option-sub">@sub</span>
+                    </span>
+                    <div class="radio-dot"></div>
+                </label>
+            }
+        </div>
+
+        <span asp-validation-for="EducationLevel" class="field-error"></span>
+
+        <button type="submit" class="btn btn-primary btn-full">Continue → </button>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        (function(){
+
+        /* ── GRID CANVAS ── */
+        var cv=document.getElementById('stepBg'),ctx=cv.getContext('2d');
+        var W,H,mx,my,tick=0;
+        function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight;mx=W/2;my=H/2;}
+        resize();window.addEventListener('resize',resize);
+        document.addEventListener('mousemove',function(e){mx=e.clientX;my=e.clientY;});
+
+        var nodes=[];
+        function buildGrid(){
+            nodes=[];
+            var cs=Math.ceil(W/68)+1,rs=Math.ceil(H/68)+1;
+            for(var r=0;r<rs;r++)for(var c=0;c<cs;c++)
+                nodes.push({ox:c*68,oy:r*68,x:c*68,y:r*68});
+        }
+        buildGrid();window.addEventListener('resize',buildGrid);
+
+        function frame(){
+            tick+=0.011;ctx.clearRect(0,0,W,H);
+            var cols=Math.ceil(W/68)+1;
+            nodes.forEach(function(n){
+                var dx=mx-n.ox,dy=my-n.oy,d=Math.sqrt(dx*dx+dy*dy),p=Math.max(0,1-d/170);
+                n.x=n.ox+dx*p*0.13+Math.sin(tick+n.oy*0.035)*1.6;
+                n.y=n.oy+dy*p*0.13+Math.cos(tick+n.ox*0.035)*1.6;
+            });
+            ctx.strokeStyle='rgba(108,110,245,0.09)';ctx.lineWidth=0.65;
+            nodes.forEach(function(n,i){
+                var c=i%cols;
+                if(c<cols-1&&nodes[i+1]){ctx.beginPath();ctx.moveTo(n.x,n.y);ctx.lineTo(nodes[i+1].x,nodes[i+1].y);ctx.stroke();}
+                if(nodes[i+cols]){ctx.beginPath();ctx.moveTo(n.x,n.y);ctx.lineTo(nodes[i+cols].x,nodes[i+cols].y);ctx.stroke();}
+            });
+            nodes.forEach(function(n){
+                var dx=mx-n.x,dy=my-n.y,d=Math.sqrt(dx*dx+dy*dy);
+                if(d<110){ctx.beginPath();ctx.arc(n.x,n.y,2.5,0,Math.PI*2);ctx.fillStyle='rgba(108,110,245,'+(1-d/110)*0.6+')';ctx.fill();}
+            });
+            requestAnimationFrame(frame);
+        }
+        frame();
+
+        /* ── FLOATING UNIVERSITY EMOJIS ── */
+        var eduEmojis=['🎓','📚','📖','✏️','🏫','📝','🔬','🏅','📐','💡','🖊️','📜','🎒','🔭','📊'];
+        var floatWrap=document.getElementById('floaters');
+        for(var i=0;i<18;i++){
+            var el=document.createElement('div');
+            el.className='floater';
+            el.textContent=eduEmojis[i%eduEmojis.length];
+            el.style.left=(Math.random()*96)+'%';
+            el.style.fontSize=(1.1+Math.random()*1.2)+'rem';
+            el.style.animationDuration=(7+Math.random()*10)+'s';
+            el.style.animationDelay=(-Math.random()*10)+'s';
+            floatWrap.appendChild(el);
+        }
+
+        /* ── SCROLLING BANNER ── */
+        var bannerItems=['🎓 Dream Big','📚 Learn More','🏫 Grow Every Day','✏️ Knowledge is Power',
+            '🔬 Discover Your Path','🏅 Achieve Excellence','📖 Education Opens Doors',
+            '💡 Innovate & Inspire','🎒 Your Journey Starts Here','📊 Build Your Future'];
+        var track=document.getElementById('bannerTrack');
+        var full=bannerItems.concat(bannerItems).concat(bannerItems);
+        full.forEach(function(t){
+            var sp=document.createElement('span');sp.textContent=t;track.appendChild(sp);
+        });
+
+        /* ── PARTICLES ── */
+        var pColors=['#6c6ef5','#f56cc8','#23e8c8','#f5a623'];
+        for(var j=0;j<12;j++){
+            var p=document.createElement('div');p.className='particle';
+            var sz=2+Math.random()*3.5;
+            p.style.cssText='width:'+sz+'px;height:'+sz+'px;background:'+pColors[j%4]+
+                ';left:'+Math.random()*100+'%;animation-duration:'+(7+Math.random()*9)+'s'+
+                ';animation-delay:'+(-Math.random()*9)+'s';
+            document.body.appendChild(p);
+        }
+
+        /* ── RIPPLE ON OPTION CLICK ── */
+        var style=document.createElement('style');
+        style.textContent='@@keyframes ripple{to{transform:scale(1);opacity:0;}}';
+        document.head.appendChild(style);
+
+        document.querySelectorAll('.option-card').forEach(function(card){
+            card.addEventListener('click',function(e){
+                var rp=document.createElement('span');
+                var rc=card.getBoundingClientRect();
+                var sz=Math.max(rc.width,rc.height)*2;
+                rp.style.cssText='position:absolute;border-radius:50%;pointer-events:none;'+
+                    'background:rgba(108,110,245,0.22);width:'+sz+'px;height:'+sz+'px;'+
+                    'left:'+(e.clientX-rc.left-sz/2)+'px;top:'+(e.clientY-rc.top-sz/2)+'px;'+
+                    'transform:scale(0);animation:ripple .55s ease-out forwards;';
+                card.appendChild(rp);
+                setTimeout(function(){rp.remove();},580);
+            });
+        });
+
+        })();
+    </script>
+}

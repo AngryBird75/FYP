@@ -1,0 +1,92 @@
+﻿@model AspiraHub.ViewModels.Roadmap.RoadmapReportVM
+@{
+    ViewData["Title"] = "Roadmap Report";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="dashboard-page">
+
+    <div class="dash-header">
+        <div class="dash-header-left">
+            <div>
+                <div class="dash-welcome">Roadmap & Progress</div>
+                <div class="dash-username">Report Summary</div>
+            </div>
+        </div>
+        <div class="dash-header-right">
+            <a asp-action="Index" class="logout-btn">← Back</a>
+        </div>
+    </div>
+
+    <div class="quick-stats">
+        <div class="stat-card blue">
+            <div class="stat-icon">🗺️</div>
+            <div class="stat-val">@Model.TotalRoadmaps</div>
+            <div class="stat-label">Total Roadmaps</div>
+        </div>
+        <div class="stat-card green">
+            <div class="stat-icon">✅</div>
+            <div class="stat-val">@Model.CompletedRoadmaps</div>
+            <div class="stat-label">Completed</div>
+        </div>
+        <div class="stat-card orange">
+            <div class="stat-icon">🏃</div>
+            <div class="stat-val">@Model.ActiveRoadmaps</div>
+            <div class="stat-label">Active</div>
+        </div>
+        <div class="stat-card purple">
+            <div class="stat-icon">⏸️</div>
+            <div class="stat-val">@Model.PausedRoadmaps</div>
+            <div class="stat-label">Paused</div>
+        </div>
+    </div>
+
+    <div class="profile-card">
+        <div class="progress-wrap">
+            <div class="progress-label">
+                Overall Progress Across All Roadmaps
+                <span class="progress-pct">@Model.OverallProgressPercent%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width:@Model.OverallProgressPercent%"></div>
+            </div>
+            <div style="font-size:.78rem; color:var(--text-2); margin-top:8px;">
+                @Model.CompletedStepsAcrossAll / @Model.TotalStepsAcrossAll steps completed
+            </div>
+        </div>
+    </div>
+
+    <div class="section-block">
+        <div class="section-title">📊 Breakdown by Roadmap</div>
+        <div class="jobs-table-wrap">
+            <table class="jobs-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Progress</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model.RoadmapBreakdown)
+                    {
+                        <tr>
+                            <td class="job-title-cell">@r.Title</td>
+                            <td><span class="badge badge-type">@r.Type</span></td>
+                            <td>
+                                <span class="badge @(r.Status == "Active" ? "badge-active" : r.Status == "Completed" ? "badge-type" : "badge-pending")">
+                                    @r.Status
+                                </span>
+                            </td>
+                            <td>@r.CompletedSteps / @r.TotalSteps (@r.ProgressPercent%)</td>
+                            <td>@r.CreatedAt.ToString("MMM dd, yyyy")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>

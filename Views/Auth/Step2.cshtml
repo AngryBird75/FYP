@@ -1,0 +1,558 @@
+﻿@model AspiraHub.ViewModels.OnboardingStep2VM
+@{
+    ViewData["Title"] = "Academic Details";
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
+}
+
+<style>
+    canvas#stepBg {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    /* Floating emojis */
+    .floaters {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 1;
+        overflow: hidden;
+    }
+
+    .floater {
+        position: absolute;
+        opacity: 0;
+        animation: floatUp linear infinite;
+        user-select: none;
+    }
+
+    @@keyframes floatUp {
+        0% {
+            opacity: 0;
+            transform: translateY(100vh) rotate(0deg) scale(0.7);
+        }
+
+        10% {
+            opacity: .7;
+        }
+
+        80% {
+            opacity: .4;
+        }
+
+        100% {
+            opacity: 0;
+            transform: translateY(-10vh) rotate(340deg) scale(1.1);
+        }
+    }
+
+    /* Orbiting deco */
+    .orbit-tr {
+        position: fixed;
+        top: -90px;
+        right: -90px;
+        width: 340px;
+        height: 340px;
+        pointer-events: none;
+        z-index: 1;
+        animation: spinS 20s linear infinite;
+    }
+
+    .orbit-bl {
+        position: fixed;
+        bottom: -70px;
+        left: -70px;
+        width: 280px;
+        height: 280px;
+        pointer-events: none;
+        z-index: 1;
+        animation: spinS 26s linear infinite reverse;
+    }
+
+    @@keyframes spinS {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Banner */
+    .edu-banner {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        overflow: hidden;
+        height: 34px;
+        background: rgba(108,110,245,0.07);
+        border-top: 1px solid rgba(108,110,245,0.13);
+        z-index: 2;
+        pointer-events: none;
+    }
+
+    .banner-track {
+        display: inline-flex;
+        gap: 2.5rem;
+        white-space: nowrap;
+        animation: marquee 24s linear infinite;
+        padding-top: 7px;
+        font-size: 12.5px;
+        color: rgba(168,158,248,0.65);
+    }
+
+    @@keyframes marquee {
+        from {
+            transform: translateX(0)
+        }
+
+        to {
+            transform: translateX(-50%);
+        }
+    }
+
+    /* CARD */
+    .onboarding-card {
+        position: relative;
+        z-index: 5;
+        background: rgba(10,10,30,0.83);
+        backdrop-filter: blur(22px);
+        border: 1px solid rgba(245,166,35,0.22);
+        border-radius: 26px;
+        padding: 2.4rem 2.2rem 2rem;
+        max-width: 480px;
+        width: 100%;
+        margin: auto;
+        box-shadow: 0 8px 48px rgba(245,166,35,0.12),0 0 0 1px rgba(255,255,255,0.04);
+        animation: cardIn .65s cubic-bezier(.4,0,.2,1) both;
+    }
+
+    @@keyframes cardIn {
+        from {
+            opacity: 0;
+            transform: translateY(32px) scale(0.96);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    /* Progress */
+    .step-prog {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 1.4rem;
+        animation: fadeUp .4s .05s both;
+    }
+
+    .prog-dot {
+        height: 5px;
+        border-radius: 4px;
+        flex: 1;
+        background: rgba(108,110,245,0.15);
+    }
+
+        .prog-dot.done {
+            background: #6c6ef5;
+        }
+
+        .prog-dot.active {
+            background: linear-gradient(90deg,#f5a623,#f56cc8);
+        }
+
+    /* Badge */
+    .step-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(245,166,35,0.12);
+        border: 1px solid rgba(245,166,35,0.3);
+        border-radius: 20px;
+        padding: 4px 14px;
+        font-size: 12px;
+        color: #f5c842;
+        margin-bottom: .75rem;
+        animation: fadeUp .4s .1s both;
+    }
+
+    /* Title */
+    .onboard-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #e8e8ff;
+        margin-bottom: 1.6rem;
+        line-height: 1.3;
+        animation: fadeUp .4s .18s both;
+    }
+
+        .onboard-title span {
+            color: #f5a623;
+        }
+
+    /* Field groups */
+    .field-group {
+        position: relative;
+        margin-bottom: 1.1rem;
+        animation: fadeUp .45s both;
+    }
+
+        .field-group:nth-child(1) {
+            animation-delay: .22s;
+        }
+
+        .field-group:nth-child(2) {
+            animation-delay: .32s;
+        }
+
+        .field-group:nth-child(3) {
+            animation-delay: .42s;
+        }
+
+    .field-icon {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1.2rem;
+        z-index: 2;
+        pointer-events: none;
+        transition: transform .3s;
+    }
+
+    .field-input {
+        width: 100%;
+        padding: 13px 14px 13px 46px;
+        border-radius: 14px;
+        border: 1.5px solid rgba(245,166,35,0.18);
+        background: rgba(20,18,50,0.6);
+        color: #e8e8ff;
+        font-size: 14px;
+        outline: none;
+        transition: border-color .25s, box-shadow .25s, background .25s;
+        position: relative;
+    }
+
+        .field-input::placeholder {
+            color: rgba(168,158,248,0.45);
+        }
+
+        .field-input:focus {
+            border-color: #f5a623;
+            background: rgba(30,26,60,0.7);
+            box-shadow: 0 0 0 3px rgba(245,166,35,0.18), 0 4px 20px rgba(245,166,35,0.12);
+        }
+
+    .field-group:focus-within .field-icon {
+        transform: translateY(-50%) scale(1.25) rotate(-8deg);
+    }
+
+    /* Floating label effect */
+    .field-label {
+        position: absolute;
+        left: 46px;
+        top: 14px;
+        font-size: 14px;
+        color: rgba(168,158,248,0.45);
+        pointer-events: none;
+        transition: all .22s cubic-bezier(.4,0,.2,1);
+        z-index: 3;
+    }
+
+    .field-input:focus ~ .field-label,
+    .field-input:not(:placeholder-shown) ~ .field-label {
+        top: -9px;
+        left: 12px;
+        font-size: 11px;
+        color: #f5a623;
+        background: rgba(10,10,30,0.95);
+        padding: 0 6px;
+        border-radius: 4px;
+    }
+
+    /* Typing sparkle */
+    .type-spark {
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1rem;
+        opacity: 0;
+        transition: opacity .3s;
+        pointer-events: none;
+    }
+
+    .field-group:focus-within .type-spark {
+        opacity: 1;
+        animation: sparkSpin 1.2s linear infinite;
+    }
+
+    @@keyframes sparkSpin {
+        to {
+            transform: translateY(-50%) rotate(360deg);
+        }
+    }
+
+    /* error */
+    .field-error {
+        display: block;
+        font-size: 12px;
+        color: #f56cc8;
+        margin-top: 4px;
+        min-height: 1.1em;
+    }
+
+    /* Button */
+    .btn-orange {
+        width: 100%;
+        padding: 13px;
+        border-radius: 40px;
+        border: none;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        background: linear-gradient(135deg,#f5a623,#f56cc8);
+        color: #fff;
+        box-shadow: 0 4px 22px rgba(245,166,35,0.38);
+        transition: transform .2s,box-shadow .2s;
+        position: relative;
+        overflow: hidden;
+        animation: fadeUp .45s .52s both;
+        margin-top: .4rem;
+    }
+
+        .btn-orange::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(110deg,transparent 25%,rgba(255,255,255,0.15) 50%,transparent 75%);
+            transform: translateX(-100%);
+            transition: transform .55s;
+        }
+
+        .btn-orange:hover::after {
+            transform: translateX(100%);
+        }
+
+        .btn-orange:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(245,108,200,0.48);
+        }
+
+        .btn-orange:active {
+            transform: scale(0.98);
+        }
+
+    @@keyframes fadeUp {
+        from {
+            opacity: 0;
+            transform: translateY(18px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes ripple {
+        to {
+            transform: scale(1);
+            opacity: 0;
+        }
+    }
+
+    .particle {
+        position: fixed;
+        pointer-events: none;
+        z-index: 1;
+        border-radius: 50%;
+        animation: pFloat linear infinite;
+    }
+
+    @@keyframes pFloat {
+        0% {
+            transform: translateY(100vh) scale(0);
+            opacity: 0;
+        }
+
+        15% {
+            opacity: .5;
+        }
+
+        85% {
+            opacity: .2;
+        }
+
+        100% {
+            transform: translateY(-8vh) scale(1);
+            opacity: 0;
+        }
+    }
+</style>
+
+<canvas id="stepBg"></canvas>
+<div class="floaters" id="floaters"></div>
+
+<!-- Orbit top-right -->
+<div class="orbit-tr">
+    <svg viewBox="0 0 340 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="170" cy="170" r="150" stroke="rgba(245,166,35,0.1)" stroke-width="1" stroke-dasharray="7 6" />
+        <circle cx="170" cy="170" r="105" stroke="rgba(245,108,200,0.08)" stroke-width="1" stroke-dasharray="4 8" />
+        <circle cx="170" cy="20" r="6" fill="#f5a623" opacity=".55" />
+        <circle cx="320" cy="170" r="5" fill="#f56cc8" opacity=".45" />
+        <text x="158" y="28" font-size="14" opacity=".5">🏫</text>
+        <text x="308" y="178" font-size="12" opacity=".4">📚</text>
+    </svg>
+</div>
+
+<!-- Orbit bottom-left -->
+<div class="orbit-bl">
+    <svg viewBox="0 0 280 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="140" cy="140" r="120" stroke="rgba(245,166,35,0.08)" stroke-width="1" stroke-dasharray="5 7" />
+        <circle cx="140" cy="140" r="75" stroke="rgba(108,110,245,0.07)" stroke-width="1" stroke-dasharray="3 6" />
+        <circle cx="140" cy="20" r="5" fill="#f5a623" opacity=".4" />
+        <text x="128" y="28" font-size="13" opacity=".4">📝</text>
+    </svg>
+</div>
+
+<!-- Scrolling banner -->
+<div class="edu-banner">
+    <div class="banner-track" id="bannerTrack"></div>
+</div>
+
+<div class="auth-card onboarding-card">
+
+    @Html.Partial("_StepBar", 2)
+
+    <div class="step-prog">
+        <div class="prog-dot done"></div>
+        <div class="prog-dot active"></div>
+        <div class="prog-dot"></div>
+        <div class="prog-dot"></div>
+        <div class="prog-dot"></div>
+    </div>
+
+    <p class="step-badge">🏫 Step 2 of 5</p>
+    <h2 class="onboard-title">Tell us about your <span>studies</span></h2>
+
+    <form asp-action="Step2" method="post" class="auth-form">
+        @Html.AntiForgeryToken()
+
+        <div class="field-group">
+            <div class="field-icon">🏫</div>
+            <select asp-for="UniversityId" class="field-input" style="padding-left:46px;">
+                <option value="">-- Select your University / College / School --</option>
+                @foreach (var uni in Model.AvailableUniversities)
+                {
+                    <option value="@uni.UniversityId">@uni.Name @(string.IsNullOrEmpty(uni.Location) ? "" : $"— {uni.Location}")</option>
+                }
+            </select>
+            <span asp-validation-for="UniversityId" class="field-error"></span>
+        </div>
+
+        <div class="field-group">
+            <div class="field-icon">📚</div>
+            <input asp-for="Program" class="field-input"
+                   placeholder=" " />
+            <label class="field-label">Program (e.g. BS, ADP, MS, PhD)</label>
+            <span class="type-spark">✨</span>
+            <span asp-validation-for="Program" class="field-error"></span>
+        </div>
+
+        <div class="field-group">
+            <div class="field-icon">🔬</div>
+            <input asp-for="Major" class="field-input"
+                   placeholder=" " />
+            <label class="field-label">Subject / Major (e.g. CS, Psychology)</label>
+            <span class="type-spark">✨</span>
+            <span asp-validation-for="Major" class="field-error"></span>
+        </div>
+
+        <button type="submit" class="btn btn-orange btn-full">Continue →</button>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        (function(){
+
+        /* GRID CANVAS */
+        var cv=document.getElementById('stepBg'),ctx=cv.getContext('2d');
+        var W,H,mx,my,tick=0;
+        function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight;mx=W/2;my=H/2;}
+        resize();window.addEventListener('resize',resize);
+        document.addEventListener('mousemove',function(e){mx=e.clientX;my=e.clientY;});
+        var nodes=[];
+        function buildGrid(){
+            nodes=[];
+            var cs=Math.ceil(W/68)+1,rs=Math.ceil(H/68)+1;
+            for(var r=0;r<rs;r++)for(var c=0;c<cs;c++)nodes.push({ox:c*68,oy:r*68,x:c*68,y:r*68});
+        }
+        buildGrid();window.addEventListener('resize',buildGrid);
+        function frame(){
+            tick+=0.011;ctx.clearRect(0,0,W,H);
+            var cols=Math.ceil(W/68)+1;
+            nodes.forEach(function(n){
+                var dx=mx-n.ox,dy=my-n.oy,d=Math.sqrt(dx*dx+dy*dy),p=Math.max(0,1-d/170);
+                n.x=n.ox+dx*p*0.13+Math.sin(tick+n.oy*0.035)*1.6;
+                n.y=n.oy+dy*p*0.13+Math.cos(tick+n.ox*0.035)*1.6;
+            });
+            ctx.strokeStyle='rgba(245,166,35,0.08)';ctx.lineWidth=0.65;
+            nodes.forEach(function(n,i){
+                var c=i%cols;
+                if(c<cols-1&&nodes[i+1]){ctx.beginPath();ctx.moveTo(n.x,n.y);ctx.lineTo(nodes[i+1].x,nodes[i+1].y);ctx.stroke();}
+                if(nodes[i+cols]){ctx.beginPath();ctx.moveTo(n.x,n.y);ctx.lineTo(nodes[i+cols].x,nodes[i+cols].y);ctx.stroke();}
+            });
+            nodes.forEach(function(n){
+                var dx=mx-n.x,dy=my-n.y,d=Math.sqrt(dx*dx+dy*dy);
+                if(d<110){ctx.beginPath();ctx.arc(n.x,n.y,2.5,0,Math.PI*2);ctx.fillStyle='rgba(245,166,35,'+(1-d/110)*0.55+')';ctx.fill();}
+            });
+            requestAnimationFrame(frame);
+        }
+        frame();
+
+        /* FLOATING EMOJIS */
+        var emojis=['🏫','📚','📖','✏️','📝','🔬','📐','💡','🖊️','📜','🎒','📊','🔭','🏅','📋'];
+        var fw=document.getElementById('floaters');
+        for(var i=0;i<16;i++){
+            var el=document.createElement('div');el.className='floater';
+            el.textContent=emojis[i%emojis.length];
+            el.style.left=(Math.random()*95)+'%';
+            el.style.fontSize=(1+Math.random()*1.1)+'rem';
+            el.style.animationDuration=(8+Math.random()*10)+'s';
+            el.style.animationDelay=(-Math.random()*10)+'s';
+            fw.appendChild(el);
+        }
+
+        /* BANNER */
+        var items=['🏫 University Life','📚 Study Hard','💡 Stay Curious','📝 Take Notes',
+            '🔬 Explore Science','🎒 Campus Ready','📖 Read More','🏅 Aim High',
+            '✏️ Write Your Story','📊 Track Progress','🔭 Look Further'];
+        var track=document.getElementById('bannerTrack');
+        items.concat(items).concat(items).forEach(function(t){
+            var sp=document.createElement('span');sp.textContent=t;track.appendChild(sp);
+        });
+
+        /* PARTICLES */
+        var pc=['#f5a623','#f56cc8','#6c6ef5','#23e8c8'];
+        for(var j=0;j<12;j++){
+            var p=document.createElement('div');p.className='particle';
+            var sz=2+Math.random()*3.5;
+            p.style.cssText='width:'+sz+'px;height:'+sz+'px;background:'+pc[j%4]+
+                ';left:'+Math.random()*100+'%;animation-duration:'+(7+Math.random()*9)+'s'+
+                ';animation-delay:'+(-Math.random()*9)+'s';
+            document.body.appendChild(p);
+        }
+
+        /* RIPPLE */
+        var rs=document.createElement('style');
+        rs.textContent='@@keyframes ripple{to{transform:scale(1);opacity:0;}}';
+        document.head.appendChild(rs);
+
+        })();
+    </script>
+}

@@ -1,0 +1,303 @@
+﻿@model AspiraHub.ViewModels.Dashboard.AdminDashboardVM
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="dashboard-page">
+
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+        <div class="page-header-title">⚙️ Admin Control Panel</div>
+        <div class="page-header-sub">Manage users, jobs, careers and platform settings</div>
+    </div>
+
+    <!-- PLATFORM STATS -->
+    <div class="stats-grid">
+        <div class="stat-card blue">
+            <div class="stat-icon">👥</div>
+            <div class="stat-val">@Model.TotalUsers</div>
+            <div class="stat-label">Total Users</div>
+        </div>
+        <div class="stat-card green">
+            <div class="stat-icon">🎓</div>
+            <div class="stat-val">@Model.TotalStudents</div>
+            <div class="stat-label">Students</div>
+        </div>
+        <div class="stat-card orange">
+            <div class="stat-icon">🏢</div>
+            <div class="stat-val">@Model.TotalCompanies</div>
+            <div class="stat-label">Companies</div>
+        </div>
+        <div class="stat-card purple">
+            <div class="stat-icon">💼</div>
+            <div class="stat-val">@Model.TotalJobs</div>
+            <div class="stat-label">Jobs Posted</div>
+        </div>
+        <div class="stat-card red">
+            <div class="stat-icon">📋</div>
+            <div class="stat-val">@Model.TotalApplications</div>
+            <div class="stat-label">Applications</div>
+        </div>
+        <div class="stat-card teal">
+            <div class="stat-icon">🧠</div>
+            <div class="stat-val">@Model.TotalCareers</div>
+            <div class="stat-label">Careers</div>
+        </div>
+        <div class="stat-card pink">
+            <div class="stat-icon">⚡</div>
+            <div class="stat-val">@Model.TotalSkills</div>
+            <div class="stat-label">Skills</div>
+        </div>
+        <div class="stat-card" style="border-color:rgba(234,179,8,.3);">
+            <div class="stat-icon">📢</div>
+            <div class="stat-val" style="color:#facc15;">@Model.ActiveAnnouncements</div>
+            <div class="stat-label">Announcements</div>
+        </div>
+    </div>
+
+    <!-- USER DISTRIBUTION -->
+    <div class="section-block">
+        <div class="section-title">
+            <span class="section-title-bar"></span>
+            👥 User Distribution
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+            @{
+                var total = Model.TotalUsers > 0 ? Model.TotalUsers : 1;
+            }
+            <div style="display:flex;align-items:center;gap:14px;">
+                <span style="width:110px;font-size:.82rem;color:var(--text2);">🎓 Students</span>
+                <div style="flex:1;height:10px;background:var(--field);border-radius:10px;overflow:hidden;border:1px solid var(--border);">
+                    <div style="height:100%;width:@(Model.StudentCount * 100 / total)%;background:linear-gradient(90deg,var(--blue),var(--blue-lt));border-radius:10px;transition:width .8s;"></div>
+                </div>
+                <span style="width:30px;text-align:right;font-size:.82rem;font-weight:700;color:var(--blue-lt);">@Model.StudentCount</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px;">
+                <span style="width:110px;font-size:.82rem;color:var(--text2);">🏢 Companies</span>
+                <div style="flex:1;height:10px;background:var(--field);border-radius:10px;overflow:hidden;border:1px solid var(--border);">
+                    <div style="height:100%;width:@(Model.CompanyCount * 100 / total)%;background:linear-gradient(90deg,var(--orange),var(--orange-lt));border-radius:10px;transition:width .8s;"></div>
+                </div>
+                <span style="width:30px;text-align:right;font-size:.82rem;font-weight:700;color:var(--orange-lt);">@Model.CompanyCount</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px;">
+                <span style="width:110px;font-size:.82rem;color:var(--text2);">⚙️ Admins</span>
+                <div style="flex:1;height:10px;background:var(--field);border-radius:10px;overflow:hidden;border:1px solid var(--border);">
+                    <div style="height:100%;width:@(Model.AdminCount * 100 / total)%;background:linear-gradient(90deg,var(--purple),#c4b5fd);border-radius:10px;transition:width .8s;"></div>
+                </div>
+                <span style="width:30px;text-align:right;font-size:.82rem;font-weight:700;color:var(--purple);">@Model.AdminCount</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ANNOUNCEMENTS -->
+    <div class="section-block">
+        <div class="section-header-row">
+            <div class="section-title">
+                <span class="section-title-bar"></span>
+                📢 Announcements
+            </div>
+            <button class="btn-sm btn-primary" onclick="toggleAnnForm()">+ New</button>
+        </div>
+
+        <!-- Add form -->
+        <div id="annForm" style="display:none;background:var(--field);border:1px solid var(--border);border-radius:14px;padding:1.2rem;margin-bottom:1rem;display:none;">
+            <div style="display:flex;flex-direction:column;gap:10px;">
+                <input type="text" id="annTitle" placeholder="Announcement Title"
+                       style="padding:10px 14px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);font-size:.85rem;outline:none;" />
+                <textarea id="annContent" rows="3" placeholder="Content..."
+                          style="padding:10px 14px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);font-size:.85rem;outline:none;resize:vertical;"></textarea>
+                <select id="annRole"
+                        style="padding:10px 14px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);font-size:.85rem;outline:none;">
+                    <option value="">All Users</option>
+                    <option value="Student">Students Only</option>
+                    <option value="Company">Companies Only</option>
+                </select>
+                <button class="btn-sm btn-primary" onclick="submitAnn()" style="align-self:flex-start;">📢 Publish</button>
+            </div>
+        </div>
+
+        @if (!Model.Announcements.Any())
+        {
+            <div class="empty-state">
+                <div class="empty-icon">📢</div>
+                <p>No announcements yet</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var ann in Model.Announcements)
+            {
+                <div class="announcement-card" style="border-left-color:var(--orange);">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;">
+                        <div class="ann-title">@ann.title</div>
+                        <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
+                            <span class="badge badge-blue">@(ann.target_role ?? "All")</span>
+                            <span class="badge @(ann.is_active ? "badge-active" : "badge-closed")">
+                                @(ann.is_active ? "Active" : "Inactive")
+                            </span>
+                            <button onclick="deleteAnn(@ann.announcement_id)"
+                                    style="padding:3px 10px;font-size:.7rem;background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.25);border-radius:20px;cursor:pointer;">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                    <div class="ann-content">@ann.content</div>
+                    <div class="ann-date">@ann.published_at.ToString("MMM dd, yyyy")</div>
+                </div>
+            }
+        }
+    </div>
+
+    <!-- RECENT USERS -->
+    <div class="section-block">
+        <div class="section-title">
+            <span class="section-title-bar"></span>
+            👥 Recent Users
+        </div>
+        <div class="table-wrap">
+            <table class="dash-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Joined</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model.RecentUsers)
+                    {
+                        <tr>
+                            <td style="font-weight:600;">@user.Name</td>
+                            <td style="color:var(--text2);font-size:.8rem;">@user.Email</td>
+                            <td><span class="badge badge-blue">@user.Role</span></td>
+                            <td>
+                                <span class="badge @(user.IsActive ? "badge-active" : "badge-closed")">
+                                    @(user.IsActive ? "Active" : "Inactive")
+                                </span>
+                            </td>
+                            <td style="color:var(--text2);font-size:.8rem;">@user.CreatedAt.ToString("MMM dd, yyyy")</td>
+                            <td>
+                                <button onclick="toggleUser(@user.UserId)"
+                                        style="padding:4px 12px;font-size:.72rem;border-radius:20px;cursor:pointer;border:1px solid;
+                                    @(user.IsActive ? "background:rgba(239,68,68,.1);color:#f87171;border-color:rgba(239,68,68,.25);" : "background:rgba(16,185,129,.1);color:#34d399;border-color:rgba(16,185,129,.25);")">
+                                    @(user.IsActive ? "Deactivate" : "Activate")
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- RECENT JOBS -->
+    <div class="section-block">
+        <div class="section-title">
+            <span class="section-title-bar"></span>
+            💼 Recent Job Postings
+        </div>
+        <div class="table-wrap">
+            <table class="dash-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Company</th>
+                        <th>Status</th>
+                        <th>Applications</th>
+                        <th>Posted</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var job in Model.RecentJobs)
+                    {
+                        <tr>
+                            <td style="font-weight:600;">@job.Title</td>
+                            <td style="color:var(--blue-lt);">@job.Company</td>
+                            <td>
+                                <span class="badge @(job.Status == "Active" ? "badge-active" : "badge-closed")">
+                                    @job.Status
+                                </span>
+                            </td>
+                            <td style="color:var(--text2);">@job.Applications</td>
+                            <td style="color:var(--text2);font-size:.8rem;">@job.PostedDate.ToString("MMM dd, yyyy")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ADMIN LOGS -->
+    <div class="section-block">
+        <div class="section-title">
+            <span class="section-title-bar"></span>
+            📝 Activity Logs
+        </div>
+        @if (!Model.RecentLogs.Any())
+        {
+            <div class="empty-state">
+                <div class="empty-icon">📝</div>
+                <p>No activity logs yet</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var log in Model.RecentLogs)
+            {
+                <div style="padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--field);margin-bottom:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.82rem;">
+                    <span style="font-weight:700;color:var(--blue-lt);">@log.action</span>
+                    @if (!string.IsNullOrEmpty(log.target_table))
+                    {
+                        <span style="color:var(--orange-lt);">→ @log.target_table</span>
+                    }
+                    @if (!string.IsNullOrEmpty(log.details))
+                    {
+                        <span style="color:var(--text2);">: @log.details</span>
+                    }
+                    <span style="margin-left:auto;color:var(--text3);font-size:.7rem;">@log.created_at.ToString("MMM dd, hh:mm tt")</span>
+                </div>
+            }
+        }
+    </div>
+
+</div>
+
+@section Scripts {
+    <script>
+        function toggleUser(userId){
+            fetch('/AdminDashboard/ToggleUser',{
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({userId})
+            }).then(r=>r.json()).then(d=>{if(d.success)location.reload();});
+        }
+        var annFormOpen=false;
+        function toggleAnnForm(){
+            annFormOpen=!annFormOpen;
+            document.getElementById('annForm').style.display=annFormOpen?'block':'none';
+        }
+        function submitAnn(){
+            var title=document.getElementById('annTitle').value;
+            var content=document.getElementById('annContent').value;
+            var role=document.getElementById('annRole').value;
+            if(!title||!content){alert('Title and content required');return;}
+            fetch('/AdminDashboard/AddAnnouncement',{
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({title,content,targetRole:role})
+            }).then(r=>r.json()).then(d=>{if(d.success)location.reload();});
+        }
+        function deleteAnn(id){
+            if(!confirm('Delete this announcement?'))return;
+            fetch('/AdminDashboard/DeleteAnnouncement',{
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({id})
+            }).then(r=>r.json()).then(d=>{if(d.success)location.reload();});
+        }
+    </script>
+}

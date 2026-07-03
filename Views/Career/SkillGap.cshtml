@@ -1,0 +1,80 @@
+﻿@model AspiraHub.ViewModels.Career.SkillGapVM
+@{
+    ViewData["Title"] = "Skill Gap Analysis";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="dashboard-page">
+
+    <div class="dash-header">
+        <div class="dash-header-left">
+            <div>
+                <div class="dash-welcome">Career Intelligence</div>
+                <div class="dash-username">Skill Gap — @Model.CareerTitle</div>
+            </div>
+        </div>
+        <div class="dash-header-right">
+            <a asp-action="Explore" class="logout-btn">← Back</a>
+        </div>
+    </div>
+
+    <div class="profile-card">
+        <div class="profile-card-top">
+            <div>
+                <div class="profile-card-name">Match Score</div>
+                <div class="profile-card-sub">Based on your current skills</div>
+            </div>
+        </div>
+        <div class="progress-wrap">
+            <div class="progress-label">
+                Overall Match
+                <span class="progress-pct">@Model.MatchPercent%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width:@Model.MatchPercent%"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-block">
+        <div class="section-title">✅ Skills You Have (@Model.HaveSkills.Count)</div>
+        @if (!Model.HaveSkills.Any())
+        {
+            <div class="empty-state"><p>No matching skills yet.</p></div>
+        }
+        @foreach (var s in Model.HaveSkills)
+        {
+            <div class="stat-chip" style="margin-bottom:8px; display:inline-flex; margin-right:8px;">
+                <span class="stat-chip-label">@s.ImportanceLevel importance</span>
+                <span class="stat-chip-val">@s.SkillName (@s.CurrentLevel)</span>
+            </div>
+        }
+    </div>
+
+    <div class="section-block">
+        <div class="section-title">⚠️ Missing Skills (@Model.MissingSkills.Count)</div>
+        @if (!Model.MissingSkills.Any())
+        {
+            <div class="empty-state"><p>Great! You have all the required skills.</p></div>
+        }
+        @foreach (var s in Model.MissingSkills)
+        {
+            <div class="stat-chip" style="margin-bottom:8px; display:inline-flex; margin-right:8px; border-color:rgba(239,68,68,.3);">
+                <span class="stat-chip-label" style="color:#f87171;">@s.ImportanceLevel importance</span>
+                <span class="stat-chip-val">@s.SkillName</span>
+            </div>
+        }
+    </div>
+
+    @if (Model.SuggestedCourses.Any())
+    {
+        <div class="section-block">
+            <div class="section-title">📚 Suggested Next Steps</div>
+            @foreach (var sugg in Model.SuggestedCourses)
+            {
+                <div class="announcement-card">@sugg</div>
+            }
+        </div>
+    }
+
+</div>

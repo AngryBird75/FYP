@@ -1,0 +1,740 @@
+﻿@model AspiraHub.ViewModels.OnboardingStep5VM
+@{
+    ViewData["Title"] = "Your Goals";
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
+}
+
+<style>
+    canvas#stepBg {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .floaters {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 1;
+        overflow: hidden;
+    }
+
+    .floater {
+        position: absolute;
+        opacity: 0;
+        animation: floatUp linear infinite;
+        user-select: none;
+    }
+
+    @@keyframes floatUp {
+        0% {
+            opacity: 0;
+            transform: translateY(100vh) rotate(0deg) scale(0.7);
+        }
+
+        10% {
+            opacity: .7;
+        }
+
+        80% {
+            opacity: .4;
+        }
+
+        100% {
+            opacity: 0;
+            transform: translateY(-10vh) rotate(340deg) scale(1.1);
+        }
+    }
+
+    .orbit-tr {
+        position: fixed;
+        top: -90px;
+        right: -90px;
+        width: 340px;
+        height: 340px;
+        pointer-events: none;
+        z-index: 1;
+        animation: spinS 22s linear infinite;
+    }
+
+    .orbit-bl {
+        position: fixed;
+        bottom: -70px;
+        left: -70px;
+        width: 280px;
+        height: 280px;
+        pointer-events: none;
+        z-index: 1;
+        animation: spinS 28s linear infinite reverse;
+    }
+
+    @@keyframes spinS {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .edu-banner {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        overflow: hidden;
+        height: 34px;
+        background: rgba(245,166,35,0.06);
+        border-top: 1px solid rgba(245,166,35,0.12);
+        z-index: 2;
+        pointer-events: none;
+    }
+
+    .banner-track {
+        display: inline-flex;
+        gap: 2.5rem;
+        white-space: nowrap;
+        animation: marquee 24s linear infinite;
+        padding-top: 7px;
+        font-size: 12.5px;
+        color: rgba(245,166,35,0.55);
+    }
+
+    @@keyframes marquee {
+        from {
+            transform: translateX(0)
+        }
+
+        to {
+            transform: translateX(-50%);
+        }
+    }
+
+    .particle {
+        position: fixed;
+        pointer-events: none;
+        z-index: 1;
+        border-radius: 50%;
+        animation: pFloat linear infinite;
+    }
+
+    @@keyframes pFloat {
+        0% {
+            transform: translateY(100vh) scale(0);
+            opacity: 0;
+        }
+
+        15% {
+            opacity: .5;
+        }
+
+        85% {
+            opacity: .2;
+        }
+
+        100% {
+            transform: translateY(-8vh) scale(1);
+            opacity: 0;
+        }
+    }
+
+    /* Confetti pieces (shown on finish hover) */
+    .confetti-piece {
+        position: fixed;
+        pointer-events: none;
+        z-index: 3;
+        width: 8px;
+        height: 8px;
+        border-radius: 2px;
+        opacity: 0;
+        animation: confettiFall linear forwards;
+    }
+
+    @@keyframes confettiFall {
+        0% {
+            transform: translateY(-20px) rotate(0deg);
+            opacity: 1;
+        }
+
+        100% {
+            transform: translateY(110vh) rotate(720deg);
+            opacity: 0;
+        }
+    }
+
+    /* CARD */
+    .onboarding-card {
+        position: relative;
+        z-index: 5;
+        background: rgba(10,10,30,0.83);
+        backdrop-filter: blur(22px);
+        border: 1px solid rgba(245,166,35,0.25);
+        border-radius: 26px;
+        padding: 2.4rem 2.2rem 2rem;
+        max-width: 500px;
+        width: 100%;
+        margin: auto;
+        box-shadow: 0 8px 48px rgba(245,166,35,0.12),0 0 0 1px rgba(255,255,255,0.04);
+        animation: cardIn .65s cubic-bezier(.4,0,.2,1) both;
+    }
+
+    @@keyframes cardIn {
+        from {
+            opacity: 0;
+            transform: translateY(32px) scale(0.96);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    /* Progress */
+    .step-prog {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 1.4rem;
+        animation: fadeUp .4s .05s both;
+    }
+
+    .prog-dot {
+        height: 5px;
+        border-radius: 4px;
+        flex: 1;
+        background: rgba(108,110,245,0.15);
+    }
+
+        .prog-dot.done {
+            background: #6c6ef5;
+        }
+
+        .prog-dot.active {
+            background: linear-gradient(90deg,#f5a623,#f56cc8);
+        }
+
+    /* Badge */
+    .step-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(245,166,35,0.1);
+        border: 1px solid rgba(245,166,35,0.3);
+        border-radius: 20px;
+        padding: 4px 14px;
+        font-size: 12px;
+        color: #f5c842;
+        margin-bottom: .75rem;
+        animation: fadeUp .4s .1s both;
+    }
+
+    .onboard-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #e8e8ff;
+        margin-bottom: 1.5rem;
+        line-height: 1.3;
+        animation: fadeUp .4s .18s both;
+    }
+
+        .onboard-title span {
+            color: #f5a623;
+        }
+
+    /* GOAL CARDS */
+    .tag-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 1.2rem;
+    }
+
+    .tag-pill {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 16px;
+        border-radius: 16px;
+        border: 1.5px solid rgba(245,166,35,0.18);
+        background: rgba(20,18,55,0.55);
+        cursor: pointer;
+        transition: border-color .25s,background .25s,transform .22s,box-shadow .25s;
+        overflow: hidden;
+        animation: fadeUp .4s both;
+    }
+
+        .tag-pill:nth-child(1) {
+            animation-delay: .22s;
+        }
+
+        .tag-pill:nth-child(2) {
+            animation-delay: .29s;
+        }
+
+        .tag-pill:nth-child(3) {
+            animation-delay: .36s;
+        }
+
+        .tag-pill:nth-child(4) {
+            animation-delay: .43s;
+        }
+
+        .tag-pill:nth-child(5) {
+            animation-delay: .50s;
+        }
+
+        /* shimmer */
+        .tag-pill::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(110deg,transparent 25%,rgba(245,166,35,0.09) 50%,transparent 75%);
+            transform: translateX(-100%);
+            transition: transform .5s;
+        }
+
+        .tag-pill:hover::before {
+            transform: translateX(100%);
+        }
+
+        .tag-pill:hover {
+            border-color: rgba(245,166,35,0.5);
+            background: rgba(245,166,35,0.08);
+            transform: translateX(7px) scale(1.01);
+            box-shadow: 0 4px 22px rgba(245,166,35,0.18);
+        }
+
+        .tag-pill:has(input:checked) {
+            border-color: #f5a623;
+            background: rgba(245,166,35,0.14);
+            transform: translateX(7px) scale(1.01);
+            box-shadow: 0 0 0 3px rgba(245,166,35,0.2),0 6px 24px rgba(245,166,35,0.22);
+        }
+
+        .tag-pill input[type="radio"] {
+            display: none;
+        }
+
+    /* goal emoji */
+    .goal-icon {
+        font-size: 1.7rem;
+        transition: transform .3s;
+        flex-shrink: 0;
+        line-height: 1;
+    }
+
+    .tag-pill:hover .goal-icon,
+    .tag-pill:has(input:checked) .goal-icon {
+        transform: scale(1.25) rotate(-8deg);
+    }
+
+    /* goal text */
+    .goal-text {
+        flex: 1;
+        font-size: 14.5px;
+        font-weight: 600;
+        color: #e8e8ff;
+    }
+
+    /* radio dot */
+    .radio-dot {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid rgba(245,166,35,0.35);
+        flex-shrink: 0;
+        transition: all .25s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .tag-pill:has(input:checked) .radio-dot {
+        background: #f5a623;
+        border-color: #f5a623;
+        box-shadow: 0 0 12px rgba(245,166,35,0.7);
+    }
+
+        .tag-pill:has(input:checked) .radio-dot::after {
+            content: '✓';
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+    /* Custom input */
+    .field-group {
+        position: relative;
+        margin-bottom: 1rem;
+        animation: fadeUp .45s .55s both;
+    }
+
+    .field-icon {
+        position: absolute;
+        left: 13px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1.1rem;
+        pointer-events: none;
+        transition: transform .3s;
+        z-index: 2;
+    }
+
+    .field-group:focus-within .field-icon {
+        transform: translateY(-50%) scale(1.2) rotate(-8deg);
+    }
+
+    .field-input {
+        width: 100%;
+        padding: 12px 12px 12px 42px;
+        border-radius: 13px;
+        border: 1.5px solid rgba(245,166,35,0.18);
+        background: rgba(20,18,50,0.6);
+        color: #e8e8ff;
+        font-size: 14px;
+        outline: none;
+        transition: border-color .25s,box-shadow .25s,background .25s;
+    }
+
+        .field-input::placeholder {
+            color: rgba(168,158,248,0.4);
+        }
+
+        .field-input:focus {
+            border-color: #f5a623;
+            background: rgba(30,26,60,0.7);
+            box-shadow: 0 0 0 3px rgba(245,166,35,0.18),0 4px 18px rgba(245,166,35,0.1);
+        }
+
+    .field-error {
+        display: block;
+        font-size: 12px;
+        color: #f56cc8;
+        margin-bottom: .5rem;
+        min-height: 1.1em;
+        animation: fadeUp .3s both;
+    }
+
+    /* Button row */
+    .btn-row {
+        display: flex;
+        gap: 12px;
+        margin-top: .5rem;
+        animation: fadeUp .45s .62s both;
+    }
+
+    .btn-skip {
+        padding: 13px 24px;
+        border-radius: 40px;
+        border: 1.5px solid rgba(245,166,35,0.3);
+        background: transparent;
+        color: #e8e8ff;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        transition: border-color .2s,color .2s,transform .2s;
+        flex-shrink: 0;
+    }
+
+        .btn-skip:hover {
+            border-color: #f5a623;
+            color: #f5a623;
+            transform: translateY(-2px);
+        }
+
+    .btn-finish {
+        flex: 1;
+        padding: 13px;
+        border-radius: 40px;
+        border: none;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        background: linear-gradient(135deg,#f5a623,#f56cc8);
+        color: #fff;
+        box-shadow: 0 4px 22px rgba(245,166,35,0.38);
+        transition: transform .2s,box-shadow .2s;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .btn-finish::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(110deg,transparent 25%,rgba(255,255,255,0.15) 50%,transparent 75%);
+            transform: translateX(-100%);
+            transition: transform .55s;
+        }
+
+        .btn-finish:hover::after {
+            transform: translateX(100%);
+        }
+
+        .btn-finish:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 28px rgba(245,108,200,0.48);
+        }
+
+        .btn-finish:active {
+            transform: scale(0.98);
+        }
+
+    /* Almost there banner */
+    .almost-banner {
+        text-align: center;
+        font-size: 12.5px;
+        color: rgba(245,166,35,0.6);
+        margin-bottom: 1rem;
+        animation: fadeUp .4s .2s both;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+
+        .almost-banner span {
+            display: inline-block;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+    @@keyframes pulse {
+        0%, 100% {
+            opacity: .6;
+        }
+
+        50% {
+            opacity: 1;
+        }
+    }
+
+    @@keyframes fadeUp {
+        from {
+            opacity: 0;
+            transform: translateY(18px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes ripple {
+        to {
+            transform: scale(1);
+            opacity: 0;
+        }
+    }
+</style>
+
+<canvas id="stepBg"></canvas>
+<div class="floaters" id="floaters"></div>
+
+<div class="orbit-tr">
+    <svg viewBox="0 0 340 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="170" cy="170" r="150" stroke="rgba(245,166,35,0.1)" stroke-width="1" stroke-dasharray="7 6" />
+        <circle cx="170" cy="170" r="105" stroke="rgba(245,108,200,0.08)" stroke-width="1" stroke-dasharray="4 8" />
+        <circle cx="170" cy="20" r="6" fill="#f5a623" opacity=".5" />
+        <circle cx="320" cy="170" r="5" fill="#f56cc8" opacity=".4" />
+        <text x="158" y="28" font-size="14" opacity=".5">🚀</text>
+        <text x="308" y="178" font-size="12" opacity=".4">🎯</text>
+    </svg>
+</div>
+<div class="orbit-bl">
+    <svg viewBox="0 0 280 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="140" cy="140" r="120" stroke="rgba(245,166,35,0.08)" stroke-width="1" stroke-dasharray="5 7" />
+        <circle cx="140" cy="140" r="75" stroke="rgba(245,108,200,0.07)" stroke-width="1" stroke-dasharray="3 6" />
+        <circle cx="140" cy="20" r="5" fill="#f5a623" opacity=".35" />
+        <text x="128" y="28" font-size="13" opacity=".4">🏆</text>
+    </svg>
+</div>
+
+<div class="edu-banner">
+    <div class="banner-track" id="bannerTrack"></div>
+</div>
+
+<div class="auth-card onboarding-card">
+
+    @Html.Partial("_StepBar", 5)
+
+    <div class="step-prog">
+        <div class="prog-dot done"></div>
+        <div class="prog-dot done"></div>
+        <div class="prog-dot done"></div>
+        <div class="prog-dot done"></div>
+        <div class="prog-dot active"></div>
+    </div>
+
+    <p class="step-badge">🏆 Step 5 of 5 — Last One!</p>
+    <h2 class="onboard-title">What is your <span>main goal?</span></h2>
+
+    <div class="almost-banner">
+        <span>🎉</span>
+        <span>Almost there! One last step to complete your profile</span>
+        <span>🎉</span>
+    </div>
+
+    <form asp-action="Step5" method="post" class="auth-form">
+        @Html.AntiForgeryToken()
+
+        <div class="tag-group">
+            @foreach (var (goal, icon) in new[]{
+                ("Get a Job","💼"),
+                ("Freelancing","💻"),
+                ("Higher Education","🎓"),
+                ("Start a Business","🚀"),
+                ("Just Learning","📚")
+            })
+            {
+                <label class="tag-pill">
+                    <input type="radio" asp-for="Goal" value="@goal" />
+                    <span class="goal-icon">@icon</span>
+                    <span class="goal-text">@goal</span>
+                    <div class="radio-dot"></div>
+                </label>
+            }
+        </div>
+
+        <div class="field-group">
+            <div class="field-icon">✍️</div>
+            <input  class="field-input"
+                   placeholder="Or write your own goal..." />
+        </div>
+        <span asp-validation-for="Goal" class="field-error"></span>
+
+        <div class="btn-row">
+            <a asp-action="Step4" class="btn-skip">← Back</a>
+            <button type="submit" class="btn-finish" id="finishBtn"
+                    onmouseenter="startConfetti()" onmouseleave="stopConfetti()">
+                Finish 🎉
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        (function(){
+
+        /* GRID CANVAS */
+        var cv=document.getElementById('stepBg'),ctx=cv.getContext('2d');
+        var W,H,mx,my,tick=0;
+        function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight;mx=W/2;my=H/2;}
+        resize();window.addEventListener('resize',resize);
+        document.addEventListener('mousemove',function(e){mx=e.clientX;my=e.clientY;});
+        var nodes=[];
+        function buildGrid(){
+            nodes=[];
+            var cs=Math.ceil(W/68)+1,rs=Math.ceil(H/68)+1;
+            for(var r=0;r<rs;r++)for(var c=0;c<cs;c++)nodes.push({ox:c*68,oy:r*68,x:c*68,y:r*68});
+        }
+        buildGrid();window.addEventListener('resize',buildGrid);
+        function frame(){
+            tick+=0.011;ctx.clearRect(0,0,W,H);
+            var cols=Math.ceil(W/68)+1;
+            nodes.forEach(function(n){
+                var dx=mx-n.ox,dy=my-n.oy,d=Math.sqrt(dx*dx+dy*dy),p=Math.max(0,1-d/170);
+                n.x=n.ox+dx*p*0.13+Math.sin(tick+n.oy*0.035)*1.6;
+                n.y=n.oy+dy*p*0.13+Math.cos(tick+n.ox*0.035)*1.6;
+            });
+            ctx.strokeStyle='rgba(245,166,35,0.07)';ctx.lineWidth=0.65;
+            nodes.forEach(function(n,i){
+                var c=i%cols;
+                if(c<cols-1&&nodes[i+1]){ctx.beginPath();ctx.moveTo(n.x,n.y);ctx.lineTo(nodes[i+1].x,nodes[i+1].y);ctx.stroke();}
+                if(nodes[i+cols]){ctx.beginPath();ctx.moveTo(n.x,n.y);ctx.lineTo(nodes[i+cols].x,nodes[i+cols].y);ctx.stroke();}
+            });
+            nodes.forEach(function(n){
+                var dx=mx-n.x,dy=my-n.y,d=Math.sqrt(dx*dx+dy*dy);
+                if(d<110){ctx.beginPath();ctx.arc(n.x,n.y,2.5,0,Math.PI*2);ctx.fillStyle='rgba(245,166,35,'+(1-d/110)*0.5+')';ctx.fill();}
+            });
+            requestAnimationFrame(frame);
+        }
+        frame();
+
+        /* FLOATING EMOJIS */
+        var emojis=['🚀','💼','🎯','🏆','💡','📚','💻','🌟','🎓','⭐','🔥','💎','🏅','✨','🎉'];
+        var fw=document.getElementById('floaters');
+        for(var i=0;i<16;i++){
+            var el=document.createElement('div');el.className='floater';
+            el.textContent=emojis[i%emojis.length];
+            el.style.left=(Math.random()*95)+'%';
+            el.style.fontSize=(1+Math.random()*1.1)+'rem';
+            el.style.animationDuration=(8+Math.random()*10)+'s';
+            el.style.animationDelay=(-Math.random()*10)+'s';
+            fw.appendChild(el);
+        }
+
+        /* BANNER */
+        var items=['💼 Get a Job','💻 Freelancing','🎓 Higher Education',
+            '🚀 Start a Business','📚 Just Learning','🏆 Achieve Your Goals',
+            '🌟 Build Your Future','🎯 Stay Focused','🔥 Never Give Up','💎 Dream Big'];
+        var track=document.getElementById('bannerTrack');
+        items.concat(items).concat(items).forEach(function(t){
+            var sp=document.createElement('span');sp.textContent=t;track.appendChild(sp);
+        });
+
+        /* PARTICLES */
+        var pc=['#f5a623','#f56cc8','#6c6ef5','#23e8c8'];
+        for(var j=0;j<12;j++){
+            var p=document.createElement('div');p.className='particle';
+            var sz=2+Math.random()*3.5;
+            p.style.cssText='width:'+sz+'px;height:'+sz+'px;background:'+pc[j%4]+
+                ';left:'+Math.random()*100+'%;animation-duration:'+(7+Math.random()*9)+'s'+
+                ';animation-delay:'+(-Math.random()*9)+'s';
+            document.body.appendChild(p);
+        }
+
+        /* RIPPLE */
+        var rs=document.createElement('style');
+        rs.textContent='@@keyframes ripple{to{transform:scale(1);opacity:0;}}';
+        document.head.appendChild(rs);
+
+        document.querySelectorAll('.tag-pill').forEach(function(pill){
+            pill.addEventListener('click',function(e){
+                var rp=document.createElement('span');
+                var rc=pill.getBoundingClientRect();
+                var sz=Math.max(rc.width,rc.height)*2;
+                rp.style.cssText='position:absolute;border-radius:50%;pointer-events:none;'+
+                    'background:rgba(245,166,35,0.2);width:'+sz+'px;height:'+sz+'px;'+
+                    'left:'+(e.clientX-rc.left-sz/2)+'px;top:'+(e.clientY-rc.top-sz/2)+'px;'+
+                    'transform:scale(0);animation:ripple .55s ease-out forwards;';
+                pill.appendChild(rp);
+                setTimeout(function(){rp.remove();},580);
+            });
+        });
+
+        })();
+
+        /* CONFETTI on Finish hover */
+        var confettiInterval=null;
+        var confColors=['#f5a623','#f56cc8','#6c6ef5','#23e8c8','#f5d020','#a078f0'];
+
+        window.startConfetti=function(){
+            confettiInterval=setInterval(function(){
+                for(var i=0;i<4;i++){
+                    var c=document.createElement('div');
+                    c.className='confetti-piece';
+                    c.style.left=(20+Math.random()*60)+'%';
+                    c.style.top='0px';
+                    c.style.background=confColors[Math.floor(Math.random()*confColors.length)];
+                    c.style.width=(6+Math.random()*8)+'px';
+                    c.style.height=(6+Math.random()*8)+'px';
+                    c.style.borderRadius=Math.random()>.5?'50%':'2px';
+                    c.style.animationDuration=(1.5+Math.random()*2)+'s';
+                    c.style.animationDelay=(Math.random()*0.3)+'s';
+                    document.body.appendChild(c);
+                    setTimeout(function(){c.remove();},3000);
+                }
+            },120);
+        };
+
+        window.stopConfetti=function(){
+            if(confettiInterval){clearInterval(confettiInterval);confettiInterval=null;}
+        };
+    </script>
+}

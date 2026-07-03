@@ -1,0 +1,1222 @@
+﻿@model AspiraHub.ViewModels.RegisterVM
+@{
+    ViewData["Title"] = "Create Account";
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
+    bool registered = ViewBag.Registered == true;
+}
+
+<style>
+    /* ── CANVAS BG ── */
+    canvas#regCanvas {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    /* ── CARD ── */
+    .auth-card {
+        position: relative;
+        z-index: 10;
+        background: rgba(10, 10, 32, 0.88);
+        border: 1px solid rgba(108, 110, 245, 0.22);
+        border-radius: 24px;
+        padding: 2.4rem 2.2rem;
+        width: 100%;
+        max-width: 440px;
+        margin: auto;
+        backdrop-filter: blur(20px);
+        box-shadow: 0 8px 48px rgba(108,110,245,0.2), inset 0 1px 0 rgba(255,255,255,0.05);
+        animation: cardEntry .6s cubic-bezier(.22,1,.36,1) both;
+    }
+
+    body.light-mode .auth-card {
+        background: rgba(255, 255, 255, 0.93);
+        border-color: rgba(75, 77, 224, 0.16);
+        box-shadow: 0 8px 48px rgba(75, 77, 224, 0.12);
+    }
+
+    @@keyframes cardEntry {
+        from {
+            opacity: 0;
+            transform: translateY(32px) scale(.97)
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1)
+        }
+    }
+
+    /* ── STEP BADGE ── */
+    .step-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 4px 13px;
+        border-radius: 20px;
+        background: rgba(108, 110, 245, 0.12);
+        border: 1px solid rgba(108, 110, 245, 0.28);
+        font-size: 11.5px;
+        font-weight: 700;
+        color: #6c6ef5;
+        letter-spacing: .8px;
+        text-transform: uppercase;
+        margin-bottom: 1rem;
+    }
+
+        .step-badge::before {
+            content: '';
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #23e8c8;
+            box-shadow: 0 0 8px #23e8c8;
+            animation: dotBlink 1.3s ease-in-out infinite;
+        }
+
+    /* ── TITLES ── */
+    .onboard-title {
+        font-size: 1.75rem;
+        font-weight: 900;
+        letter-spacing: -.5px;
+        color: #e8e8ff;
+        margin-bottom: .4rem;
+    }
+
+    body.light-mode .onboard-title {
+        color: #0a0a2e;
+    }
+
+    .onboard-sub {
+        font-size: 13.5px;
+        color: #6060a0;
+        margin-bottom: 1.6rem;
+        line-height: 1.6;
+    }
+
+    body.light-mode .onboard-sub {
+        color: #5555aa;
+    }
+
+    /* ── FORM ── */
+    .auth-form {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+
+    /* ── FIELD GROUP — FIXED ── */
+    .field-wrap {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 14px;
+        width: 100%;
+    }
+
+    .field-group {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1.5px solid rgba(108, 110, 245, 0.25);
+        border-radius: 14px;
+        overflow: hidden;
+        transition: border-color .25s, box-shadow .25s, transform .2s;
+        min-height: 52px;
+        box-sizing: border-box;
+    }
+
+    body.light-mode .field-group {
+        background: rgba(0, 0, 40, 0.04);
+        border-color: rgba(108, 110, 245, 0.2);
+    }
+
+    .field-group:focus-within {
+        border-color: rgba(108, 110, 245, 0.7);
+        box-shadow: 0 0 0 3px rgba(108, 110, 245, 0.12), 0 4px 16px rgba(108, 110, 245, 0.15);
+        transform: translateY(-1px);
+    }
+
+    .field-group.field-error-state {
+        border-color: rgba(245, 80, 80, 0.6) !important;
+        box-shadow: 0 0 0 3px rgba(245, 80, 80, 0.1) !important;
+        animation: shake .35s ease;
+    }
+
+    /* ── FIELD ICON ── */
+    .field-icon {
+        width: 46px;
+        min-width: 46px;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        flex-shrink: 0;
+        opacity: .75;
+        pointer-events: none;
+    }
+
+    /* ── FIELD INPUT — THE KEY FIX ── */
+    .field-input {
+        flex: 1;
+        min-width: 0; /* ✅ prevents overflow */
+        width: 100%;
+        background: transparent !important;
+        border: none !important;
+        outline: none !important;
+        padding: .85rem .5rem .85rem 0;
+        font-size: 14.5px;
+        color: #e8e8ff;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        line-height: 1.4;
+        -webkit-appearance: none;
+        appearance: none;
+        box-shadow: none !important;
+    }
+
+    body.light-mode .field-input {
+        color: #0a0a2e;
+    }
+
+    .field-input::placeholder {
+        color: #4a4a80;
+        opacity: 1;
+    }
+
+    body.light-mode .field-input::placeholder {
+        color: #9090bb;
+    }
+
+    /* Fix browser autofill background */
+    .field-input:-webkit-autofill,
+    .field-input:-webkit-autofill:hover,
+    .field-input:-webkit-autofill:focus {
+        -webkit-text-fill-color: #e8e8ff;
+        -webkit-box-shadow: 0 0 0px 1000px rgba(10,10,32,0.9) inset !important;
+        transition: background-color 5000s ease-in-out 0s;
+    }
+
+    body.light-mode .field-input:-webkit-autofill {
+        -webkit-text-fill-color: #0a0a2e;
+        -webkit-box-shadow: 0 0 0px 1000px rgba(255,255,255,0.9) inset !important;
+    }
+
+    /* ── EYE BUTTON ── */
+    .eye-btn {
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 0 14px;
+        font-size: 16px;
+        opacity: .7;
+        transition: opacity .2s, transform .2s;
+        flex-shrink: 0;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        color: inherit;
+    }
+
+        .eye-btn:hover {
+            opacity: 1;
+            transform: scale(1.15);
+        }
+
+    /* ── VALIDATION ERRORS ── */
+    .field-error {
+        display: block;
+        font-size: 12px;
+        color: #f05858;
+        padding: 4px 4px 0;
+        min-height: 0;
+    }
+
+        .field-error:empty {
+            display: none;
+        }
+
+    .validation-summary-errors {
+        background: rgba(245, 80, 80, 0.1);
+        border: 1px solid rgba(245, 80, 80, 0.3);
+        border-radius: 10px;
+        padding: 10px 14px;
+        margin-bottom: 14px;
+    }
+
+        .validation-summary-errors ul {
+            margin: 0;
+            padding: 0 0 0 16px;
+            color: #f05858;
+            font-size: 13px;
+        }
+
+    /* ── PROGRESS BAR ── */
+    .form-progress {
+        height: 3px;
+        background: rgba(108, 110, 245, 0.12);
+        border-radius: 2px;
+        margin-bottom: 1.2rem;
+        overflow: hidden;
+    }
+
+    .form-progress-fill {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #6c6ef5, #f56cc8);
+        border-radius: 2px;
+        transition: width .4s cubic-bezier(.22,1,.36,1);
+        box-shadow: 0 0 8px rgba(108, 110, 245, 0.5);
+    }
+
+    /* ── ROLE SELECTION ── */
+    .role-section {
+        margin-bottom: 14px;
+    }
+
+    .role-label-text {
+        font-size: 13px;
+        color: #6060a0;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    body.light-mode .role-label-text {
+        color: #5555aa;
+    }
+
+    .role-cards {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .role-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        padding: 14px 10px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1.5px solid rgba(108, 110, 245, 0.2);
+        border-radius: 14px;
+        cursor: pointer;
+        transition: all .2s;
+        user-select: none;
+    }
+
+    body.light-mode .role-card {
+        background: rgba(0, 0, 40, 0.04);
+    }
+
+    .role-card input[type="radio"] {
+        display: none;
+    }
+
+    .role-card.selected,
+    .role-card:has(input:checked) {
+        border-color: rgba(108, 110, 245, 0.7);
+        background: rgba(108, 110, 245, 0.12);
+        box-shadow: 0 0 0 3px rgba(108, 110, 245, 0.1);
+    }
+
+    .role-card:hover {
+        border-color: rgba(108, 110, 245, 0.5);
+        transform: translateY(-2px);
+    }
+
+    .role-card-icon {
+        font-size: 1.8rem;
+    }
+
+    .role-card-name {
+        font-size: .82rem;
+        font-weight: 700;
+        color: #a0a0d0;
+    }
+
+    body.light-mode .role-card-name {
+        color: #4040a0;
+    }
+
+    /* ── SUBMIT BUTTON ── */
+    .btn-primary {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 14px;
+        border-radius: 50px;
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: .5px;
+        background: linear-gradient(135deg, #5a5cf5, #8840e0, #f056c8);
+        color: #fff;
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 6px 28px rgba(108, 110, 245, 0.45);
+        transition: transform .25s, box-shadow .25s, filter .2s;
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+        text-decoration: none;
+        margin-top: 6px;
+    }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.14), transparent 55%);
+            border-radius: 50px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 12px 38px rgba(245, 108, 200, 0.55);
+            filter: brightness(1.08);
+        }
+
+        .btn-primary:active {
+            transform: scale(.98);
+        }
+
+        .btn-primary.launching {
+            animation: btnLaunch .5s ease forwards;
+            pointer-events: none;
+        }
+
+    .btn-orange {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 13px;
+        border-radius: 50px;
+        font-size: 14.5px;
+        font-weight: 700;
+        background: linear-gradient(135deg, #f5a623, #f56cc8);
+        color: #fff;
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 6px 24px rgba(245, 166, 35, 0.4);
+        transition: transform .25s, box-shadow .25s;
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+        margin-bottom: .8rem;
+    }
+
+        .btn-orange::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.14), transparent 55%);
+            border-radius: 50px;
+        }
+
+        .btn-orange:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 12px 32px rgba(245, 166, 35, 0.5);
+        }
+
+    /* ── AUTH SWITCH ── */
+    .auth-switch {
+        text-align: center;
+        margin-top: 1.2rem;
+        font-size: 13.5px;
+        color: #6060a0;
+    }
+
+    body.light-mode .auth-switch {
+        color: #5555aa;
+    }
+
+    .link-blue {
+        color: #6c6ef5;
+        font-weight: 700;
+        text-decoration: none;
+        transition: color .2s;
+    }
+
+        .link-blue:hover {
+            color: #f56cc8;
+        }
+
+    /* ── SUCCESS STATE ── */
+    .success-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.2rem;
+        text-align: center;
+        animation: successEntry .7s cubic-bezier(.22,1,.36,1) both;
+    }
+
+    @@keyframes successEntry {
+        from {
+            opacity: 0;
+            transform: scale(.9)
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1)
+        }
+    }
+
+    .success-icon {
+        font-size: 4rem;
+        animation: iconBounce .7s cubic-bezier(.22,1,.36,1) both;
+        animation-delay: .2s;
+    }
+
+    @@keyframes iconBounce {
+        from {
+            opacity: 0;
+            transform: scale(.4) rotate(-20deg)
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1) rotate(0deg)
+        }
+    }
+
+    /* ── KEY SHOWCASE ── */
+    .key-showcase {
+        position: relative;
+        width: 100%;
+        background: rgba(108, 110, 245, 0.07);
+        border: 1px solid rgba(108, 110, 245, 0.28);
+        border-radius: 18px;
+        padding: 1.6rem 1.4rem;
+        overflow: hidden;
+        text-align: center;
+    }
+
+    body.light-mode .key-showcase {
+        background: rgba(108, 110, 245, 0.06);
+    }
+
+    .key-glow {
+        position: absolute;
+        top: -30px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(108,110,245,0.25) 0%, transparent 70%);
+        pointer-events: none;
+        animation: keyGlowPulse 2.5s ease-in-out infinite;
+    }
+
+    @@keyframes keyGlowPulse {
+        0%, 100% {
+            transform: translateX(-50%) scale(1);
+            opacity: .7
+        }
+
+        50% {
+            transform: translateX(-50%) scale(1.2);
+            opacity: 1
+        }
+    }
+
+    .key-icon-big {
+        font-size: 2.8rem;
+        animation: keyFloat 3s ease-in-out infinite;
+        display: block;
+        margin-bottom: .5rem;
+    }
+
+    @@keyframes keyFloat {
+        0%, 100% {
+            transform: translateY(0) rotate(-5deg)
+        }
+
+        50% {
+            transform: translateY(-8px) rotate(5deg)
+        }
+    }
+
+    .key-label {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 2px;
+        color: #6c6ef5;
+        text-transform: uppercase;
+        margin-bottom: .6rem;
+    }
+
+    .key-value {
+        font-size: 1.4rem;
+        font-weight: 800;
+        letter-spacing: 4px;
+        color: #e8e8ff;
+        background: rgba(0, 0, 30, 0.5);
+        border: 1px solid rgba(108, 110, 245, 0.35);
+        border-radius: 10px;
+        padding: .8rem 1rem;
+        margin-bottom: .8rem;
+        font-family: 'Courier New', monospace;
+        animation: keyReveal .8s cubic-bezier(.22,1,.36,1) both;
+        animation-delay: .4s;
+        position: relative;
+        overflow: hidden;
+    }
+
+    body.light-mode .key-value {
+        color: #0a0a2e;
+        background: rgba(240, 240, 255, 0.8);
+    }
+
+    .key-value::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, transparent 0%, rgba(108,110,245,0.3) 50%, transparent 100%);
+        animation: keyScan 2s ease-in-out 1;
+    }
+
+    @@keyframes keyReveal {
+        from {
+            opacity: 0;
+            filter: blur(8px);
+            transform: scale(.95)
+        }
+
+        to {
+            opacity: 1;
+            filter: blur(0);
+            transform: scale(1)
+        }
+    }
+
+    @@keyframes keyScan {
+        0% {
+            transform: translateX(-100%)
+        }
+
+        100% {
+            transform: translateX(100%)
+        }
+    }
+
+    .key-warning {
+        font-size: 12.5px;
+        color: #f5a623;
+        font-weight: 600;
+        line-height: 1.5;
+        margin-bottom: 1rem;
+        padding: .6rem .8rem;
+        background: rgba(245, 166, 35, 0.08);
+        border: 1px solid rgba(245, 166, 35, 0.22);
+        border-radius: 10px;
+    }
+
+    /* ── LAUNCH OVERLAY ── */
+    #launchOverlay {
+        position: fixed;
+        inset: 0;
+        z-index: 999;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity .3s;
+    }
+
+        #launchOverlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+    .launch-rocket {
+        position: absolute;
+        left: 50%;
+        bottom: -120px;
+        transform: translateX(-50%);
+        font-size: 56px;
+        transition: bottom 1.2s cubic-bezier(.22,1,.36,1), opacity .3s;
+        filter: drop-shadow(0 0 20px rgba(245,166,35,0.8));
+    }
+
+    #launchOverlay.active .launch-rocket {
+        bottom: 110%;
+    }
+
+    .launch-text {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: #e8e8ff;
+        letter-spacing: 2px;
+        text-align: center;
+        text-shadow: 0 0 20px rgba(108,110,245,0.8);
+        animation: launchTextPulse 1.5s ease-in-out infinite;
+        opacity: 0;
+        transition: opacity .4s .3s;
+    }
+
+    #launchOverlay.active .launch-text {
+        opacity: 1;
+    }
+
+    .launch-bg {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse at 50% 100%, rgba(245,166,35,0.15) 0%, rgba(108,110,245,0.1) 40%, transparent 70%);
+        animation: launchBgPulse 1s ease-in-out infinite;
+    }
+
+    /* ── TOAST ── */
+    .toast {
+        position: fixed;
+        bottom: 28px;
+        left: 50%;
+        transform: translateX(-50%) translateY(20px);
+        background: rgba(10, 10, 32, 0.95);
+        border: 1px solid rgba(108, 110, 245, 0.35);
+        color: #e8e8ff;
+        padding: 12px 22px;
+        border-radius: 40px;
+        font-size: 13.5px;
+        font-weight: 600;
+        box-shadow: 0 8px 28px rgba(108,110,245,0.3);
+        backdrop-filter: blur(16px);
+        z-index: 9999;
+        animation: toastIn .4s cubic-bezier(.22,1,.36,1) forwards;
+        white-space: nowrap;
+    }
+
+    /* ── MOUSE TRAIL ── */
+    .mtrail {
+        position: fixed;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 9999;
+        transform: translate(-50%, -50%);
+        opacity: .8;
+        transition: opacity .6s;
+    }
+
+    body.light-mode .key-label {
+        color: #4b4de0;
+    }
+
+    /* ── ANIMATIONS ── */
+    @@keyframes shake {
+        0%, 100% {
+            transform: translateX(0)
+        }
+
+        20% {
+            transform: translateX(-6px)
+        }
+
+        40% {
+            transform: translateX(6px)
+        }
+
+        60% {
+            transform: translateX(-4px)
+        }
+
+        80% {
+            transform: translateX(4px)
+        }
+    }
+
+    @@keyframes dotBlink {
+        0%, 100% {
+            opacity: 1;
+            transform: scale(1)
+        }
+
+        50% {
+            opacity: .3;
+            transform: scale(.6)
+        }
+    }
+
+    @@keyframes launchTextPulse {
+        0%, 100% {
+            opacity: .7
+        }
+
+        50% {
+            opacity: 1;
+            text-shadow: 0 0 30px rgba(108,110,245,1)
+        }
+    }
+
+    @@keyframes launchBgPulse {
+        0%, 100% {
+            opacity: .6
+        }
+
+        50% {
+            opacity: 1
+        }
+    }
+
+    @@keyframes btnLaunch {
+        0% {
+            transform: scale(1)
+        }
+
+        50% {
+            transform: scale(.95)
+        }
+
+        100% {
+            transform: scale(1)
+        }
+    }
+
+    @@keyframes toastIn {
+        from {
+            opacity: 0;
+            transform: translateX(-50%) translateY(20px)
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0)
+        }
+    }
+</style>
+
+<!-- Canvas background -->
+<canvas id="regCanvas"></canvas>
+
+<!-- Launch overlay -->
+<div id="launchOverlay">
+    <div class="launch-bg"></div>
+    <div class="launch-rocket">🚀</div>
+    <div class="launch-text">
+        Creating Your Account...<br>
+        <span style="font-size:.9rem;opacity:.7;letter-spacing:1px;">
+            Launching into AspiraHub
+        </span>
+    </div>
+</div>
+
+@if (!registered)
+{
+    <div class="auth-card" id="regCard">
+        <p class="step-badge">Final Step</p>
+        <h2 class="onboard-title">Create Your Account</h2>
+        <p class="onboard-sub">Almost there! Set up your login details below.</p>
+
+        <!-- Progress bar -->
+        <div class="form-progress">
+            <div class="form-progress-fill" id="progressFill"></div>
+        </div>
+
+        @* Validation Summary *@
+        <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+
+        <form asp-action="Register" method="post" class="auth-form" id="regForm">
+            @Html.AntiForgeryToken()
+
+            @* ── Full Name ── *@
+            <div class="field-wrap">
+                <div class="field-group" id="fg-name">
+                    <div class="field-icon">👤</div>
+                    <input asp-for="FullName"
+                           class="field-input"
+                           placeholder="Full Name"
+                           autocomplete="name"
+                           oninput="updateProgress()"
+                           onfocus="fieldFocus(this)"
+                           onblur="fieldBlur(this)" />
+                </div>
+                <span asp-validation-for="FullName" class="field-error"></span>
+            </div>
+
+            @* ── Email ── *@
+            <div class="field-wrap">
+                <div class="field-group" id="fg-email">
+                    <div class="field-icon">✉️</div>
+                    <input asp-for="Email"
+                           class="field-input"
+                           placeholder="Email Address"
+                           autocomplete="email"
+                           oninput="updateProgress()"
+                           onfocus="fieldFocus(this)"
+                           onblur="fieldBlur(this)" />
+                </div>
+                <span asp-validation-for="Email" class="field-error"></span>
+            </div>
+
+            @* ── Password ── *@
+            <div class="field-wrap">
+                <div class="field-group" id="fg-pass">
+                    <div class="field-icon">🔒</div>
+                    <input asp-for="Password"
+                           type="password"
+                           id="passInput"
+                           class="field-input"
+                           placeholder="Password (min 8 chars)"
+                           autocomplete="new-password"
+                           oninput="updateProgress()"
+                           onfocus="fieldFocus(this)"
+                           onblur="fieldBlur(this)" />
+                    <button type="button"
+                            class="eye-btn"
+                            onclick="toggleEye('passInput','eyePass')">
+                        <span id="eyePass">👁️</span>
+                    </button>
+                </div>
+                <span asp-validation-for="Password" class="field-error"></span>
+            </div>
+
+            @* ── Confirm Password ── *@
+            <div class="field-wrap">
+                <div class="field-group" id="fg-confirm">
+                    <div class="field-icon">🔒</div>
+                    <input asp-for="ConfirmPassword"
+                           type="password"
+                           id="confirmInput"
+                           class="field-input"
+                           placeholder="Confirm Password"
+                           autocomplete="new-password"
+                           oninput="updateProgress()"
+                           onfocus="fieldFocus(this)"
+                           onblur="fieldBlur(this)" />
+                    <button type="button"
+                            class="eye-btn"
+                            onclick="toggleEye('confirmInput','eyeConfirm')">
+                        <span id="eyeConfirm">👁️</span>
+                    </button>
+                </div>
+                <span asp-validation-for="ConfirmPassword" class="field-error"></span>
+            </div>
+
+            @* ── Role Selection ── *@
+            <div class="role-section">
+                <span class="role-label-text">I am a:</span>
+                <div class="role-cards">
+                    <label class="role-card selected" id="card-student"
+                           onclick="selectRole('Student', this)">
+                        <input asp-for="Role"
+                               type="radio"
+                               value="Student"
+                               checked />
+                        <div class="role-card-icon">🎓</div>
+                        <div class="role-card-name">Student</div>
+                    </label>
+                    <label class="role-card" id="card-company"
+                           onclick="selectRole('Company', this)">
+                        <input asp-for="Role"
+                               type="radio"
+                               value="Company" />
+                        <div class="role-card-icon">🏢</div>
+                        <div class="role-card-name">Company</div>
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit"
+                    class="btn-primary"
+                    id="submitBtn">
+                <span id="btnText">🚀 Create Account</span>
+            </button>
+        </form>
+
+        <p class="auth-switch">
+            Already have an account?
+            <a href="/Auth/Login" class="link-blue">Login</a>
+        </p>
+    </div>
+}
+else
+{
+    <div class="auth-card">
+        <div class="success-wrap">
+            <div class="success-icon">🎉</div>
+            <h2 class="onboard-title">Welcome, @Model.FullName!</h2>
+            <p class="onboard-sub">
+                Your account has been created successfully.<br>
+                Save your unique login key below.
+            </p>
+
+            <div class="key-showcase">
+                <div class="key-glow"></div>
+                <span class="key-icon-big">🔑</span>
+                <p class="key-label">Your Unique Login Key</p>
+                <div class="key-value" id="uniqueKey">@ViewBag.GeneratedKey</div>
+                <p class="key-warning">
+                    ⚠️ Save this key! You can use it to login instead of your email.
+                </p>
+                <button type="button"
+                        onclick="copyKey()"
+                        class="btn-orange">
+                    📋 Copy Key
+                </button>
+            </div>
+
+            <a href="/Auth/Login" class="btn-primary">
+                Go to Login →
+            </a>
+        </div>
+    </div>
+}
+
+<script>
+    (function () {
+
+        /* ── BG CANVAS ── */
+        var cv  = document.getElementById('regCanvas');
+        var ctx = cv.getContext('2d');
+        var W, H, mx = innerWidth / 2, my = innerHeight / 2, tick = 0;
+        var isDark = !document.body.classList.contains('light-mode');
+
+        function resize() { W = cv.width = innerWidth; H = cv.height = innerHeight; }
+        resize();
+        window.addEventListener('resize', resize);
+        document.addEventListener('mousemove', function (e) { mx = e.clientX; my = e.clientY; });
+
+        var themeBtn = document.querySelector('.theme-toggle');
+        if (themeBtn) themeBtn.addEventListener('click', function () {
+            setTimeout(function () { isDark = !document.body.classList.contains('light-mode'); }, 50);
+        });
+
+        /* ── PARTICLES ── */
+        var parts = [];
+        window._spawnPart = function spawnPart(x, y, burst) {
+            var colors = ['#6c6ef5', '#f56cc8', '#f5a623', '#23e8c8', '#a078f0'];
+            var count  = burst ? 12 : 1;
+            for (var i = 0; i < count; i++) {
+                var angle = Math.random() * Math.PI * 2;
+                var speed = burst ? (Math.random() * 4 + 1) : (Math.random() * .5 + .1);
+                parts.push({
+                    x: x || Math.random() * W,
+                    y: y || Math.random() * H,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed - (burst ? 2 : 0),
+                    r: Math.random() * (burst ? 4 : 2) + .5,
+                    color: colors[Math.floor(Math.random() * 5)],
+                    life: 1,
+                    decay: Math.random() * (burst ? .025 : .006) + .003
+                });
+            }
+            if (parts.length > 200) parts.splice(0, parts.length - 200);
+        };
+
+        /* ── GRID NODES ── */
+        var nodes = [];
+        function buildGrid() {
+            nodes = [];
+            var cs = Math.ceil(W / 80) + 1, rs = Math.ceil(H / 80) + 1;
+            for (var r = 0; r < rs; r++)
+                for (var c = 0; c < cs; c++)
+                    nodes.push({ x: c * 80, y: r * 80, ox: c * 80, oy: r * 80 });
+        }
+        buildGrid();
+        window.addEventListener('resize', function () { resize(); buildGrid(); });
+
+        function frame() {
+            tick += 0.012;
+            ctx.clearRect(0, 0, W, H);
+
+            var cols2 = Math.ceil(W / 80) + 1;
+            var lc = isDark ? 'rgba(108,110,245,0.07)' : 'rgba(75,77,224,0.06)';
+
+            nodes.forEach(function (n) {
+                var dx = mx - n.ox, dy = my - n.oy;
+                var d  = Math.sqrt(dx * dx + dy * dy);
+                var p  = Math.max(0, 1 - d / 200);
+                n.x = n.ox + dx * p * 0.2 + Math.sin(tick + n.oy * 0.03) * 2.5;
+                n.y = n.oy + dy * p * 0.2 + Math.cos(tick + n.ox * 0.03) * 2.5;
+            });
+
+            ctx.strokeStyle = lc; ctx.lineWidth = .5;
+            nodes.forEach(function (n, i) {
+                var c = i % cols2;
+                if (c < cols2 - 1 && nodes[i + 1]) {
+                    ctx.beginPath(); ctx.moveTo(n.x, n.y);
+                    ctx.lineTo(nodes[i + 1].x, nodes[i + 1].y); ctx.stroke();
+                }
+                if (nodes[i + cols2]) {
+                    ctx.beginPath(); ctx.moveTo(n.x, n.y);
+                    ctx.lineTo(nodes[i + cols2].x, nodes[i + cols2].y); ctx.stroke();
+                }
+            });
+
+            nodes.forEach(function (n) {
+                var dx = mx - n.x, dy = my - n.y;
+                var d  = Math.sqrt(dx * dx + dy * dy);
+                if (d < 130) {
+                    ctx.beginPath(); ctx.arc(n.x, n.y, 2.5, 0, 6.28);
+                    ctx.fillStyle = isDark
+                        ? 'rgba(108,110,245,' + (1 - d / 130) * .85 + ')'
+                        : 'rgba(75,77,224,'  + (1 - d / 130) * .7  + ')';
+                    ctx.fill();
+                }
+            });
+
+            if (Math.random() < .25) window._spawnPart();
+            parts.forEach(function (p) {
+                p.x += p.vx; p.y += p.vy; p.life -= p.decay;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.28);
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.life * .5;
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+            parts = parts.filter(function (p) { return p.life > 0; });
+
+            requestAnimationFrame(frame);
+        }
+        frame();
+
+        /* ── MOUSE TRAIL ── */
+        var tColors = ['#6c6ef5', '#f56cc8', '#23e8c8', '#f5a623', '#a078f0'];
+        var lastT   = 0;
+        document.addEventListener('mousemove', function (e) {
+            var now = Date.now();
+            if (now - lastT < 30) return;
+            lastT = now;
+            var d   = document.createElement('div');
+            d.className = 'mtrail';
+            d.style.left = e.clientX + 'px';
+            d.style.top  = e.clientY + 'px';
+            var col = tColors[Math.floor(Math.random() * 5)];
+            d.style.background  = col;
+            d.style.boxShadow   = '0 0 8px ' + col + ',0 0 16px ' + col;
+            document.body.appendChild(d);
+            setTimeout(function () {
+                d.style.opacity    = '0';
+                d.style.transition = 'opacity .6s';
+                setTimeout(function () { if (d.parentNode) d.remove(); }, 600);
+            }, 45);
+        });
+
+        /* ── PROGRESS BAR ── */
+        var fields = ['FullName', 'Email', 'Password', 'ConfirmPassword'];
+        window.updateProgress = function () {
+            var filled = 0;
+            fields.forEach(function (f) {
+                var el = document.querySelector('[name="' + f + '"]');
+                if (el && el.value.trim().length > 0) filled++;
+            });
+            var fill = document.getElementById('progressFill');
+            if (fill) fill.style.width = ((filled / fields.length) * 100) + '%';
+        };
+
+        /* ── FIELD FOCUS ── */
+        window.fieldFocus = function (input) {
+            var r = input.getBoundingClientRect();
+            window._spawnPart(r.left + r.width / 2, r.top, true);
+        };
+        window.fieldBlur = function () {};
+
+        /* ── ROLE SELECT ── */
+        window.selectRole = function (role, el) {
+            document.querySelectorAll('.role-card').forEach(function (c) {
+                c.classList.remove('selected');
+            });
+            if (el) el.classList.add('selected');
+            var radios = document.querySelectorAll('[name="Role"]');
+            radios.forEach(function (r) {
+                r.checked = (r.value === role);
+            });
+        };
+
+        /* ── FORM SUBMIT ── */
+        var form = document.getElementById('regForm');
+        if (form) {
+            form.addEventListener('submit', function (e) {
+                var hasError = false;
+                fields.forEach(function (f) {
+                    var el = document.querySelector('[name="' + f + '"]');
+                    if (el && !el.value.trim()) {
+                        hasError = true;
+                        var fg = el.closest('.field-group');
+                        if (fg) {
+                            fg.classList.add('field-error-state');
+                            setTimeout(function () {
+                                fg.classList.remove('field-error-state');
+                            }, 600);
+                        }
+                    }
+                });
+                if (hasError) { e.preventDefault(); return; }
+
+                var btn     = document.getElementById('submitBtn');
+                var overlay = document.getElementById('launchOverlay');
+                if (btn) btn.classList.add('launching');
+                if (btn) {
+                    var r = btn.getBoundingClientRect();
+                    window._spawnPart(r.left + r.width / 2, r.top + r.height / 2, true);
+                    setTimeout(function () { window._spawnPart(r.left + r.width / 2, r.top + r.height / 2, true); }, 150);
+                    setTimeout(function () { window._spawnPart(r.left + r.width / 2, r.top + r.height / 2, true); }, 300);
+                }
+                if (overlay) overlay.classList.add('active');
+            });
+        }
+
+        /* ── KEY COPY ── */
+        window.copyKey = function () {
+            var key = document.getElementById('uniqueKey');
+            if (!key) return;
+            navigator.clipboard.writeText(key.innerText.trim()).then(function () {
+                showToast('🔑 Key copied to clipboard!');
+                var r = key.getBoundingClientRect();
+                window._spawnPart(r.left + r.width / 2, r.top + r.height / 2, true);
+            });
+        };
+
+        /* ── TOAST ── */
+        window.showToast = function (msg) {
+            var old = document.querySelector('.toast');
+            if (old) old.remove();
+            var t = document.createElement('div');
+            t.className  = 'toast';
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(function () {
+                t.style.transition = 'all .4s';
+                t.style.opacity    = '0';
+                t.style.transform  = 'translateX(-50%) translateY(20px)';
+                setTimeout(function () { if (t.parentNode) t.remove(); }, 400);
+            }, 2800);
+        };
+
+        /* ── EYE TOGGLE ── */
+        window.toggleEye = function (inputId, eyeId) {
+            var input = document.getElementById(inputId);
+            var eye   = document.getElementById(eyeId);
+            if (!input || !eye) return;
+            input.type    = input.type === 'password' ? 'text' : 'password';
+            eye.textContent = input.type === 'password' ? '👁️' : '🙈';
+        };
+
+        /* ── SUCCESS CONFETTI ── */
+        var successIcon = document.querySelector('.success-icon');
+        if (successIcon) {
+            setTimeout(function () {
+                var r = successIcon.getBoundingClientRect();
+                for (var i = 0; i < 5; i++) {
+                    setTimeout(function () {
+                        window._spawnPart(r.left + r.width / 2, r.top + r.height / 2, true);
+                    }, i * 120);
+                }
+            }, 500);
+        }
+
+        /* ── INIT PROGRESS ── */
+        updateProgress();
+
+    })();
+</script>

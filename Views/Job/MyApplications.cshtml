@@ -1,0 +1,58 @@
+﻿@model List<AspiraHub.ViewModels.Job.MyApplicationVM>
+@{
+    ViewData["Title"] = "My Applications";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="dashboard-page">
+    <div class="dash-header">
+        <div class="dash-header-left">
+            <div>
+                <div class="dash-welcome">Job Portal</div>
+                <div class="dash-username">My Applications</div>
+            </div>
+        </div>
+        <div class="dash-header-right">
+            <a asp-controller="StudentDashboard" asp-action="Index" class="logout-btn">← Dashboard</a>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+            <div class="empty-icon">📋</div>
+            <p>You haven't applied to any jobs yet.</p>
+            <a asp-controller="Job" asp-action="Browse" class="btn-primary-sm">Browse Jobs</a>
+        </div>
+    }
+
+    <div class="section-block">
+        <div class="jobs-table-wrap">
+            <table class="jobs-table">
+                <thead>
+                    <tr>
+                        <th>Job Title</th>
+                        <th>Company</th>
+                        <th>Status</th>
+                        <th>Applied On</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var app in Model)
+                    {
+                        <tr>
+                            <td class="job-title-cell">@app.JobTitle</td>
+                            <td>@app.CompanyName</td>
+                            <td>
+                                <span class="badge @(app.Status == "Pending" ? "badge-pending" : app.Status == "Reviewed" ? "badge-active" : "badge-closed")">
+                                    @app.Status
+                                </span>
+                            </td>
+                            <td>@app.AppliedAt.ToString("MMM dd, yyyy")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,236 @@
+﻿@model AspiraHub.ViewModels.Dashboard.CompanyDashboardVM
+@{
+    ViewData["Title"] = "Company Dashboard";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="dashboard-page">
+
+    <!-- ── HEADER ───────────────────────────────── -->
+    <div class="dash-header">
+        <div class="dash-header-left">
+            <div class="dash-avatar company-avatar">
+                @if (!string.IsNullOrEmpty(Model.LogoUrl))
+                {
+                    <img src="@Model.LogoUrl" alt="@Model.CompanyName" />
+                }
+                else
+                {
+                    <span>🏢</span>
+                }
+            </div>
+            <div>
+                <div class="dash-welcome">Company Dashboard</div>
+                <div class="dash-username">
+                    @Model.CompanyName
+                    @if (Model.IsVerified)
+                    {
+                        <span class="verified-badge">✅ Verified</span>
+                    }
+                </div>
+                @if (!string.IsNullOrEmpty(Model.Industry))
+                {
+                    <div class="dash-sub">
+                        @Model.Industry
+                        @if (!string.IsNullOrEmpty(Model.Location))
+                        {
+                            <span> • 📍 @Model.Location</span>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="dash-header-right">
+            <div class="notif-btn" onclick="toggleNotif()">
+                🔔
+                @if (Model.UnreadNotifications > 0)
+                {
+                    <span class="notif-badge">@Model.UnreadNotifications</span>
+                }
+            </div>
+            <a asp-controller="Auth" asp-action="Logout" class="logout-btn">
+                Sign Out
+            </a>
+        </div>
+    </div>
+
+    <!-- ── NOTIFICATION PANEL ───────────────────── -->
+    <div class="notif-panel" id="notifPanel">
+        <div class="notif-panel-title">🔔 Notifications</div>
+        @if (!Model.RecentNotifications.Any())
+        {
+            <p class="notif-empty">No notifications yet</p>
+        }
+        @foreach (var n in Model.RecentNotifications)
+        {
+            <div class="notif-item @(!n.is_read ? "unread" : "")">
+                <div class="notif-item-title">@n.title</div>
+                <div class="notif-item-body">@n.body</div>
+                <div class="notif-item-time">
+                    @n.created_at.ToString("MMM dd, hh:mm tt")
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- ── STATS CARDS ───────────────────────────── -->
+    <div class="quick-stats">
+        <div class="stat-card blue">
+            <div class="stat-icon">📋</div>
+            <div class="stat-val">@Model.TotalJobs</div>
+            <div class="stat-label">Total Jobs</div>
+        </div>
+        <div class="stat-card green">
+            <div class="stat-icon">✅</div>
+            <div class="stat-val">@Model.ActiveJobs</div>
+            <div class="stat-label">Active Jobs</div>
+        </div>
+        <div class="stat-card orange">
+            <div class="stat-icon">👥</div>
+            <div class="stat-val">@Model.TotalApplications</div>
+            <div class="stat-label">Total Applications</div>
+        </div>
+        <div class="stat-card red">
+            <div class="stat-icon">⏳</div>
+            <div class="stat-val">@Model.PendingApplications</div>
+            <div class="stat-label">Pending Review</div>
+        </div>
+        <div class="stat-card purple">
+            <div class="stat-icon">👁️</div>
+            <div class="stat-val">@Model.TotalViews</div>
+            <div class="stat-label">Total Views</div>
+        </div>
+    </div>
+
+    <!-- ── POST JOB BUTTON ──────────────────────── -->
+    <div class="section-block">
+        <div class="section-header-row">
+            <div class="section-title">📋 My Job Postings</div>
+            <a href="#" class="btn-primary-sm">+ Post New Job</a>
+        </div>
+
+        @if (!Model.Jobs.Any())
+        {
+            <div class="empty-state">
+                <div class="empty-icon">📋</div>
+                <p>No jobs posted yet. Post your first job!</p>
+                <a href="#" class="btn-primary-sm">Post a Job</a>
+            </div>
+        }
+
+        <div class="jobs-table-wrap">
+            <table class="jobs-table">
+                <thead>
+                    <tr>
+                        <th>Job Title</th>
+                        <th>Type</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                        <th>Views</th>
+                        <th>Applications</th>
+                        <th>Deadline</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var job in Model.Jobs)
+                    {
+                        <tr>
+                            <td class="job-title-cell">@job.Title</td>
+                            <td>
+                                <span class="badge badge-type">@job.JobType</span>
+                            </td>
+                            <td>@job.Location</td>
+                            <td>
+                                <span class="badge @(job.Status == "Active" ? "badge-active" : "badge-closed")">
+                                    @job.Status
+                                </span>
+                            </td>
+                            <td>👁 @job.Views</td>
+                            <td>👥 @job.Applications</td>
+                            <td>
+                                @(job.Deadline.HasValue
+                                    ? job.Deadline.Value.ToString("MMM dd, yyyy")
+                                    : "—")
+                            </td>
+                            <td>
+                                <a href="#" class="tbl-btn">Edit</a>
+                                <a href="#" class="tbl-btn red">Close</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ── RECENT APPLICATIONS ───────────────────── -->
+    <div class="section-block">
+        <div class="section-title">👥 Recent Applications</div>
+        @if (!Model.RecentApplications.Any())
+        {
+            <div class="empty-state">
+                <div class="empty-icon">📭</div>
+                <p>No applications received yet</p>
+            </div>
+        }
+        @foreach (var app in Model.RecentApplications)
+        {
+            <div class="applicant-card">
+                <div class="applicant-avatar">
+                    @app.StudentName.Substring(0, 1).ToUpper()
+                </div>
+                <div class="applicant-info">
+                    <div class="applicant-name">@app.StudentName</div>
+                    <div class="applicant-job">Applied for: @app.JobTitle</div>
+                    <div class="applicant-date">
+                        @app.AppliedAt.ToString("MMM dd, yyyy hh:mm tt")
+                    </div>
+                </div>
+                <div class="applicant-actions">
+                    <span class="badge @GetStatusBadge(app.Status)">@app.Status</span>
+                    @if (!string.IsNullOrEmpty(app.ResumeUrl))
+                    {
+                        <a href="@app.ResumeUrl" target="_blank" class="tbl-btn">Resume</a>
+                    }
+                    <button class="tbl-btn green"
+                            onclick="updateStatus(@app.ApplicationId, 'Reviewed')">
+                        Review
+                    </button>
+                    <button class="tbl-btn red"
+                            onclick="updateStatus(@app.ApplicationId, 'Rejected')">
+                        Reject
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
+
+</div>
+
+@functions {
+    string GetStatusBadge(string status) => status switch
+    {
+        "Pending" => "badge-pending",
+        "Reviewed" => "badge-active",
+        "Rejected" => "badge-closed",
+        _ => "badge-type"
+    };
+}
+
+@section Scripts {
+    <script>
+        function toggleNotif() {
+            document.getElementById('notifPanel').classList.toggle('open');
+        }
+        function updateStatus(appId, status) {
+            fetch('/CompanyDashboard/UpdateApplicationStatus', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ applicationId: appId, status: status })
+            }).then(r => r.json()).then(d => {
+                if (d.success) location.reload();
+            });
+        }
+    </script>
+}

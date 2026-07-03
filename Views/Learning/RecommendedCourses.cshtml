@@ -1,0 +1,57 @@
+﻿@model AspiraHub.ViewModels.Learning.RecommendedCoursesVM
+@{
+    ViewData["Title"] = "Recommended Courses";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="dashboard-page">
+    <div class="dash-header">
+        <div class="dash-header-left">
+            <div>
+                <div class="dash-welcome">Learning</div>
+                <div class="dash-username">Recommended Courses</div>
+            </div>
+        </div>
+        <div class="dash-header-right">
+            <a asp-controller="StudentDashboard" asp-action="Index" class="logout-btn">← Dashboard</a>
+        </div>
+    </div>
+
+    @if (!Model.Courses.Any())
+    {
+        <div class="empty-state">
+            <div class="empty-icon">🎓</div>
+            <p>No course recommendations yet. Complete a skill gap analysis first!</p>
+            <a asp-controller="Career" asp-action="Explore" class="btn-primary-sm">Explore Careers</a>
+        </div>
+    }
+
+    @foreach (var c in Model.Courses)
+    {
+        <div class="job-card">
+            <div class="job-card-left">
+                <div class="job-title">@c.CourseName</div>
+                <div class="job-company">
+                    🏫 @c.InstituteName
+                    @{
+                        var badgeIcon2 = c.Mode.ToLower() switch
+                        {
+                            "online" => "🌐",
+                            "physical" => "🏫",
+                            "hybrid" => "🔀",
+                            _ => "❔"
+                        };
+                    }
+                    <span style="font-size:.7rem;padding:2px 8px;border-radius:10px;background:rgba(108,110,245,0.12);color:#6c6ef5;margin-left:6px;">@badgeIcon2 @c.Mode</span>
+                </div>
+                <div class="job-meta">
+                    <span>⏱️ @c.Duration</span>
+                    <span>💰 @c.Fee</span>
+                </div>
+                <div style="font-size:.78rem; color:var(--blue-lt); margin-top:6px;">
+                    💡 @c.Reason
+                </div>
+            </div>
+        </div>
+    }
+</div>

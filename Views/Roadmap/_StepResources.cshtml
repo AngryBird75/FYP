@@ -1,0 +1,70 @@
+﻿@model AspiraHub.ViewModels.Roadmap.StepResourcesVM
+
+<h3 style="margin-bottom:14px;">📍 Where to get: @Model.StepTitle</h3>
+
+@if (Model.Courses.Any())
+{
+    <div style="margin-bottom:16px;">
+        <div style="font-size:.8rem;color:var(--text-2);margin-bottom:8px;">Courses / Institutes</div>
+        @foreach (var c in Model.Courses)
+        {
+            <div class="job-card" style="align-items:flex-start;">
+                <div class="job-card-left">
+                    <div class="job-title">@c.CourseName</div>
+                    <div class="job-company">
+                        @c.InstituteName
+                        @{
+                            var badgeIcon = c.Mode.ToLower() switch
+                            {
+                                "online" => "🌐",
+                                "physical" => "🏫",
+                                "hybrid" => "🔀",
+                                _ => "❔"
+                            };
+                        }
+                        <span style="font-size:.7rem;padding:2px 8px;border-radius:10px;background:rgba(108,110,245,0.12);color:#6c6ef5;margin-left:6px;">@badgeIcon @c.Mode</span>
+                    </div>
+                    <div class="job-meta">
+                        <span>⏱ @c.Duration</span>
+                        <span>💰 @c.Fee</span>
+                    </div>
+                </div>
+                @if (!string.IsNullOrEmpty(c.Website))
+                {
+                    <a href="@c.Website" target="_blank" class="btn-primary" style="font-size:.75rem;padding:6px 12px;">Visit →</a>
+                }
+            </div>
+        }
+    </div>
+}
+
+@if (Model.Universities.Any())
+{
+    <div>
+        <div style="font-size:.8rem;color:var(--text-2);margin-bottom:8px;">Universities</div>
+        @foreach (var u in Model.Universities)
+        {
+            <div class="job-card" style="align-items:flex-start;">
+                <div class="job-card-left">
+                    <div class="job-title">@u.Name</div>
+                    <div class="job-meta">
+                        <span>📍 @u.Location</span>
+                        @if (u.Ranking.HasValue)
+                        {
+                            <span>🏆 Rank #@u.Ranking</span>
+                        }
+                    </div>
+                </div>
+                @if (!string.IsNullOrEmpty(u.Website))
+                {
+                    <a href="@u.Website" target="_blank" class="btn-primary" style="font-size:.75rem;padding:6px 12px;">Visit →</a>
+                }
+            </div>
+        }
+    </div>
+}
+
+@if (!Model.Courses.Any() && !Model.Universities.Any())
+{
+    <p style="color:var(--text-2);font-size:.85rem;">Is step ke liye abhi koi specific institute/university match nahi mila. Apni field mein general search karein.</p>
+}

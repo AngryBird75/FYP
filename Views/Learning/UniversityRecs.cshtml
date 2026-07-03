@@ -1,0 +1,42 @@
+﻿@model AspiraHub.ViewModels.Learning.UniversityRecsVM
+@{
+    ViewData["Title"] = "University Recommendations";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="dashboard-page">
+    <div class="dash-header">
+        <div class="dash-header-left">
+            <div>
+                <div class="dash-welcome">Learning</div>
+                <div class="dash-username">University Recommendations</div>
+            </div>
+        </div>
+        <div class="dash-header-right">
+            <a asp-controller="StudentDashboard" asp-action="Index" class="logout-btn">← Dashboard</a>
+        </div>
+    </div>
+
+    @foreach (var u in Model.Universities)
+    {
+        <div class="job-card">
+            <div class="job-card-left">
+                <div class="job-title">@u.Name</div>
+                <div class="job-meta">
+                    <span>📍 @u.Location</span>
+                    @if (u.Ranking.HasValue)
+                    {
+                        <span>🏆 Rank #@u.Ranking</span>
+                    }
+                    <span class="badge badge-type">@u.Type</span>
+                </div>
+                <div style="font-size:.78rem; color:var(--text-2); margin-top:6px;">
+                    💰 @u.FeeStructure
+                </div>
+                <div style="font-size:.78rem; color:var(--blue-lt); margin-top:6px;">
+                    💡 @u.Reason
+                </div>
+            </div>
+        </div>
+    }
+</div>

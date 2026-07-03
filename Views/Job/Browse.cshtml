@@ -1,0 +1,100 @@
+﻿@model AspiraHub.ViewModels.Job.JobBrowseVM
+@{
+    ViewData["Title"] = "Browse Jobs";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="dashboard-page">
+    <div class="dash-header">
+        <div class="dash-header-left">
+            <div>
+                <div class="dash-welcome">Job Portal</div>
+                <div class="dash-username">Browse Jobs</div>
+            </div>
+        </div>
+        <div class="dash-header-right">
+            <a asp-controller="StudentDashboard" asp-action="Index" class="logout-btn">← Dashboard</a>
+        </div>
+    </div>
+
+    <div class="section-block">
+        <form method="get" style="display:flex; gap:10px; flex-wrap:wrap;">
+            <input type="text" name="search" value="@Model.SearchTerm"
+                   placeholder="Search jobs..." class="field-select" style="flex:1; min-width:200px;" />
+            <select name="jobType" class="field-select" style="width:160px;">
+                <option value="">All Types</option>
+                <option value="Internship" selected="@(Model.FilterJobType=="Internship")">Internship</option>
+                <option value="Full-time"  selected="@(Model.FilterJobType=="Full-time")">Full-time</option>
+                <option value="Part-time"  selected="@(Model.FilterJobType=="Part-time")">Part-time</option>
+            </select>
+            <button type="submit" class="btn-primary-sm">Search</button>
+        </form>
+    </div>
+
+    @if (!Model.Jobs.Any())
+    {
+        <div class="empty-state">
+            <div class="empty-icon">💼</div>
+            <p>No jobs found.</p>
+        </div>
+    }
+
+    @foreach (var job in Model.Jobs)
+    {
+        <div class="job-card">
+            <div class="job-card-left">
+                <div class="job-title">@job.Title</div>
+                <div class="job-company">🏢 @job.CompanyName</div>
+                <div class="job-meta">
+                    @if (!string.IsNullOrEmpty(job.Location)) { <span>📍 @job.Location</span> }
+                    @if (!string.IsNullOrEmpty(job.JobType)) { <span class="badge badge-blue">@job.JobType</span> }
+                    @if (!string.IsNullOrEmpty(job.Salary)) { <span>💰 @job.Salary</span> }
+                    @if (job.Deadline.HasValue) { <span>⏰ @job.Deadline.Value.ToString("MMM dd")</span> }
+                </div>
+            </div>
+            <div class="job-card-right">
+                <div class="match-score @(job.MatchScore >= 70 ? "high" : job.MatchScore >= 40 ? "mid" : "low")">
+                    @job.MatchScore%
+                </div>
+                <div class="match-label">Match</div>
+
+                @if (job.IsApplied)
+                {
+                    <span class="badge badge-active">Applied</span>
+                }
+                else
+                {
+                    <button class="btn-apply" onclick="applyJob(@job.JobId)">Apply →</button>
+                }
+
+                <button class="tbl-btn @(job.IsSaved ? "red" : "green")"
+                        onclick="toggleSaveJob(@job.JobId, @(job.IsSaved ? "true" : "false"), this)">
+                    @(job.IsSaved ? "Unsave" : "Save")
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+<script>
+function applyJob(jobId) {
+    if (!confirm('Apply for this job?')) return;
+    fetch('/Job/Apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `jobId=${jobId}`
+    }).then(r => r.json()).then(d => {
+        if (d.success) location.reload();
+        else alert('You may have already applied for this job.');
+    });
+}
+function toggleSaveJob(jobId, isSaved) {
+    fetch('/Job/ToggleSave', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `jobId=${jobId}&isSaved=${isSaved}`
+    }).then(r => r.json()).then(d => { if (d.success) location.reload(); });
+}
+</script>
+}

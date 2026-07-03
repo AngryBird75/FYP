@@ -1,0 +1,52 @@
+﻿@model AspiraHub.ViewModels.Learning.MyLearningProgressVM
+@{
+    ViewData["Title"] = "My Progress";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="dashboard-page">
+    <div class="dash-header">
+        <div class="dash-header-left">
+            <div>
+                <div class="dash-welcome">Learning</div>
+                <div class="dash-username">My Progress</div>
+            </div>
+        </div>
+        <div class="dash-header-right">
+            <a asp-controller="StudentDashboard" asp-action="Index" class="logout-btn">← Dashboard</a>
+        </div>
+    </div>
+
+    <div class="quick-stats">
+        <div class="stat-card blue">
+            <div class="stat-icon">📚</div>
+            <div class="stat-val">@Model.CoursesInProgress</div>
+            <div class="stat-label">Courses In Progress</div>
+        </div>
+        <div class="stat-card green">
+            <div class="stat-icon">✅</div>
+            <div class="stat-val">@Model.CoursesCompleted</div>
+            <div class="stat-label">Courses Completed</div>
+        </div>
+        <div class="stat-card teal">
+            <div class="stat-icon">🗺️</div>
+            <div class="stat-val">@Model.TotalRoadmaps</div>
+            <div class="stat-label">Total Roadmaps</div>
+        </div>
+    </div>
+
+    <div class="profile-card">
+        <div class="progress-wrap">
+            <div class="progress-label">
+                Roadmap Steps Completed
+                <span class="progress-pct">@Model.OverallProgressPercent%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width:@Model.OverallProgressPercent%"></div>
+            </div>
+            <div style="font-size:.78rem; color:var(--text-2); margin-top:8px;">
+                @Model.RoadmapStepsDone / @Model.RoadmapStepsTotal steps completed
+            </div>
+        </div>
+    </div>
+</div>

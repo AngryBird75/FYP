@@ -1,0 +1,34 @@
+﻿<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] — AspiraHub</title>
+    <link rel="stylesheet" href="~/css/aspirahub.css" />
+    <link rel="icon" href="~/images/favicon.ico" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+    <!-- Theme Toggle Button -->
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+        <span class="theme-icon">🌙</span>
+    </button>
+
+    <!-- Animated Background -->
+    <div class="bg-animated">
+        <div class="bg-dots"></div>
+        <div class="bg-glow glow-1"></div>
+        <div class="bg-glow glow-2"></div>
+        <div class="bg-glow glow-3"></div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="auth-main">
+        @RenderBody()
+    </main>
+
+    <script src="~/js/auth.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

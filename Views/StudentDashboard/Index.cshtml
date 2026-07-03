@@ -1,0 +1,368 @@
+﻿@model AspiraHub.ViewModels.Dashboard.StudentDashboardVM
+@{
+    ViewData["Title"] = "Student Dashboard";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="dashboard-page">
+
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+        <div class="page-header-title">Welcome back, @Model.Name! 👋</div>
+        <div class="page-header-sub">Here's your career overview for today</div>
+    </div>
+
+    <!-- PROFILE CARD -->
+    <div class="profile-card">
+        <div class="profile-card-top">
+            <div class="profile-card-left">
+                <div class="profile-big-avatar">
+                    @if (!string.IsNullOrEmpty(Model.ProfilePicture))
+                    {
+                        <img src="@Model.ProfilePicture" alt="@Model.Name" />
+                    }
+                    else
+                    {
+                        <span>@Model.Name.Substring(0, 1).ToUpper()</span>
+                    }
+                </div>
+                <div>
+                    <div class="profile-card-name">@Model.Name</div>
+                    <div class="profile-card-sub">
+                        @Model.EducationLevel
+                        @if (!string.IsNullOrEmpty(Model.UniversityName))
+                        {
+                            <span> • @Model.UniversityName</span>
+                        }
+                    </div>
+                    <div class="profile-card-prog">@Model.Program</div>
+                </div>
+            </div>
+            <div class="key-badge">🔑 @Model.UniqueKey</div>
+        </div>
+
+        <div class="profile-chips">
+            @if (Model.Skills.Any())
+            {
+                <div class="chip">
+                    <span class="chip-label">Top Skill</span>
+                    <span class="chip-val">@Model.Skills.First().SkillName (@Model.Skills.First().ProficiencyLevel)</span>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(Model.Interests))
+            {
+                <div class="chip">
+                    <span class="chip-label">Interest</span>
+                    <span class="chip-val">@Model.Interests.Split(',').First().Trim()</span>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(Model.Goal))
+            {
+                <div class="chip">
+                    <span class="chip-label">Goal</span>
+                    <span class="chip-val">@Model.Goal</span>
+                </div>
+            }
+        </div>
+
+        <div class="progress-wrap">
+            <div class="progress-label">
+                <span>Profile Completion</span>
+                <span class="progress-pct">@Model.ProfileCompletion%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width:@Model.ProfileCompletion%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- QUICK STATS -->
+    <div class="stats-grid">
+        <div class="stat-card blue">
+            <div class="stat-icon">📚</div>
+            <div class="stat-val">@Model.CoursesInProgress</div>
+            <div class="stat-label">Courses In Progress</div>
+        </div>
+        <div class="stat-card green">
+            <div class="stat-icon">✅</div>
+            <div class="stat-val">@Model.CoursesCompleted</div>
+            <div class="stat-label">Completed</div>
+        </div>
+        <div class="stat-card orange">
+            <div class="stat-icon">💼</div>
+            <div class="stat-val">@Model.MatchedJobs</div>
+            <div class="stat-label">Matched Jobs</div>
+        </div>
+        <div class="stat-card purple">
+            <div class="stat-icon">📋</div>
+            <div class="stat-val">@Model.AppliedJobs</div>
+            <div class="stat-label">Applied Jobs</div>
+        </div>
+        <div class="stat-card teal">
+            <div class="stat-icon">🗺️</div>
+            <div class="stat-val">@Model.TotalRoadmaps</div>
+            <div class="stat-label">Roadmaps</div>
+        </div>
+        <div class="stat-card pink">
+            <div class="stat-icon">⚡</div>
+            <div class="stat-val">@Model.Skills.Count</div>
+            <div class="stat-label">Skills Added</div>
+        </div>
+    </div>
+
+    <!-- ANNOUNCEMENTS -->
+    @if (Model.Announcements.Any())
+    {
+        <div class="section-block">
+            <div class="section-title">
+                <span class="section-title-bar"></span>
+                📢 Announcements
+            </div>
+            @foreach (var ann in Model.Announcements)
+            {
+                <div class="announcement-card">
+                    <div class="ann-title">@ann.title</div>
+                    <div class="ann-content">@ann.content</div>
+                    <div class="ann-date">@ann.published_at.ToString("MMM dd, yyyy")</div>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- TWO COLUMN ROW -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+        <!-- ROADMAP PROGRESS — UPDATED with link -->
+        <div class="section-header-row">
+            <div class="section-title">
+                <span class="section-title-bar"></span>
+                🗺️ Roadmap Progress
+            </div>
+            <a asp-controller="Roadmap" asp-action="Report" class="btn-sm btn-outline">View Report</a>
+        </div>
+                <div class="roadmap-card">
+                    <div class="roadmap-info">
+                        <span class="roadmap-emoji">🚀</span>
+                        <div>
+                            <div class="roadmap-title">
+                                @(Model.TotalRoadmaps > 0
+                                    ? $"{Model.TotalRoadmaps} Active Roadmap(s)"
+                                    : "No roadmap yet")
+                            </div>
+                            <div class="roadmap-sub">
+                                @(Model.TotalRoadmaps > 0 ? "Keep going!" : "Start your journey →")
+                            </div>
+                        </div>
+                    </div>
+                    <div class="roadmap-pct">@Model.RoadmapProgress%</div>
+                </div>
+            </a>
+            <div class="progress-wrap" style="margin-top:.8rem;">
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width:@Model.RoadmapProgress%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SKILLS -->
+        <div class="section-block">
+            <div class="section-title">
+                <span class="section-title-bar"></span>
+                ⚡ My Skills
+            </div>
+            @if (!Model.Skills.Any())
+            {
+                <div class="empty-state">
+                    <div class="empty-icon">⚡</div>
+                    <p>No skills added yet</p>
+                </div>
+            }
+            else
+            {
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                    @foreach (var skill in Model.Skills.Take(5))
+                    {
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--field);border-radius:10px;border:1px solid var(--border);">
+                            <span style="font-size:.85rem;font-weight:600;">⚡ @skill.SkillName</span>
+                            <span class="badge @(skill.ProficiencyLevel == "Advanced" ? "badge-active" : skill.ProficiencyLevel == "Intermediate" ? "badge-pending" : "badge-blue")">
+                                @skill.ProficiencyLevel
+                            </span>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+    </div>
+
+    <!-- TOP MATCHED JOBS -->
+    <div class="section-block">
+        <div class="section-header-row">
+            <div class="section-title">
+                <span class="section-title-bar"></span>
+                💼 Top Matched Jobs
+            </div>
+            <a href="#" class="btn-sm btn-outline">View All</a>
+        </div>
+        @if (!Model.TopMatchedJobs.Any())
+        {
+            <div class="empty-state">
+                <div class="empty-icon">💼</div>
+                <p>No matched jobs yet. Complete your profile to get matches!</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var job in Model.TopMatchedJobs)
+            {
+                <div class="job-card">
+                    <div class="job-card-left">
+                        <div class="job-title">@job.Title</div>
+                        <div class="job-company">🏢 @job.Company</div>
+                        <div class="job-meta">
+                            @if (!string.IsNullOrEmpty(job.Location))
+                            {
+                                <span>📍 @job.Location</span>
+                            }
+                            @if (!string.IsNullOrEmpty(job.JobType))
+                            {
+                                <span class="badge badge-blue">@job.JobType</span>
+                            }
+                            @if (job.Deadline.HasValue)
+                            {
+                                <span>⏰ @job.Deadline.Value.ToString("MMM dd")</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="job-card-right">
+                        <div class="match-score @(job.MatchScore >= 70 ? "high" : job.MatchScore >= 40 ? "mid" : "low")">
+                            @job.MatchScore%
+                        </div>
+                        <div class="match-label">Match</div>
+                        <a href="#" class="btn-apply">Apply →</a>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    <!-- CAREER TOOLS — UPDATED with correct routes -->
+    <div class="section-block">
+        <div class="section-title">
+            <span class="section-title-bar"></span>
+            🧠 Career Tools
+        </div>
+        <div class="tools-grid">
+            <a href="#" class="tool-card">
+                <div class="tool-icon">🤖</div>
+                <div class="tool-name">AI Career Counselor</div>
+            </a>
+            <a asp-controller="Career" asp-action="Explore" class="tool-card">
+                <div class="tool-icon">🔭</div>
+                <div class="tool-name">Explore Careers</div>
+            </a>
+            <a asp-controller="Career" asp-action="Compare" class="tool-card">
+                <div class="tool-icon">⚖️</div>
+                <div class="tool-name">Compare Careers</div>
+            </a>
+            <a asp-controller="Roadmap" asp-action="Index" class="tool-card">
+                <div class="tool-icon">🗺️</div>
+                <div class="tool-name">Career Roadmap</div>
+            </a>
+            <a asp-controller="Career" asp-action="Explore" class="tool-card">
+                <div class="tool-icon">📊</div>
+                <div class="tool-name">Skill Gap Analysis</div>
+            </a>
+            <a asp-controller="Career" asp-action="SavedCareers" class="tool-card">
+                <div class="tool-icon">❤️</div>
+                <div class="tool-name">Saved Careers</div>
+            </a>
+        </div>
+    </div>
+
+    <!-- LEARNING SECTION — UPDATED -->
+    <div class="section-block">
+        <div class="section-title">
+            <span class="section-title-bar"></span>
+            📚 Learning
+        </div>
+        <div class="tools-grid" style="grid-template-columns:1fr 1fr;">
+            <a asp-controller="Learning" asp-action="RecommendedCourses" class="tool-card">
+                <div class="tool-icon">🎓</div>
+                <div class="tool-name">Recommended Courses</div>
+            </a>
+            <a asp-controller="Learning" asp-action="MyProgress" class="tool-card">
+                <div class="tool-icon">📈</div>
+                <div class="tool-name">My Progress</div>
+            </a>
+            <a asp-controller="Learning" asp-action="UniversityRecs" class="tool-card">
+                <div class="tool-icon">🏫</div>
+                <div class="tool-name">University Recs</div>
+            </a>
+            <a href="#" class="tool-card">
+                <div class="tool-icon">📜</div>
+                <div class="tool-name">Certificates</div>
+            </a>
+        </div>
+    </div>
+
+    <!-- JOBS SECTION — UPDATED -->
+    <div class="section-block">
+        <div class="section-title">
+            <span class="section-title-bar"></span>
+            💼 Jobs
+        </div>
+        <div class="tools-grid" style="grid-template-columns:1fr 1fr;">
+            <a asp-controller="Job" asp-action="Browse" class="tool-card">
+                <div class="tool-icon">🔍</div>
+                <div class="tool-name">Browse Jobs</div>
+            </a>
+            <a asp-controller="Job" asp-action="MyApplications" class="tool-card">
+                <div class="tool-icon">📋</div>
+                <div class="tool-name">My Applications</div>
+            </a>
+            <a href="#" class="tool-card">
+                <div class="tool-icon">🔔</div>
+                <div class="tool-name">Job Alerts</div>
+            </a>
+            <a asp-controller="Job" asp-action="SavedJobs" class="tool-card">
+                <div class="tool-icon">⭐</div>
+                <div class="tool-name">Saved Jobs</div>
+            </a>
+        </div>
+    </div>
+
+    <!-- NOTIFICATIONS -->
+    @if (Model.RecentNotifications.Any())
+    {
+        <div class="section-block">
+            <div class="section-title">
+                <span class="section-title-bar"></span>
+                🔔 Recent Notifications
+            </div>
+            @foreach (var n in Model.RecentNotifications)
+            {
+                <div class="notif-item @(!n.is_read ? "unread" : "")" style="margin-bottom:8px;">
+                    <div class="notif-item-title">@n.title</div>
+                    <div class="notif-item-body">@n.body</div>
+                    <div class="notif-item-time">@n.created_at.ToString("MMM dd, hh:mm tt")</div>
+                </div>
+            }
+        </div>
+    }
+
+</div>
+
+@section Scripts {
+    <script>
+        /* Responsive 2-col grid on mobile */
+        document.querySelectorAll('[style*="grid-template-columns:1fr 1fr"]').forEach(function(el){
+            if(window.innerWidth < 600) el.style.gridTemplateColumns = '1fr';
+        });
+        window.addEventListener('resize', function(){
+            document.querySelectorAll('[style*="grid-template-columns:1fr 1fr"]').forEach(function(el){
+                el.style.gridTemplateColumns = window.innerWidth < 600 ? '1fr' : '1fr 1fr';
+            });
+        });
+    </script>
+}

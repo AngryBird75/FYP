@@ -1,0 +1,219 @@
+﻿@model AspiraHub.ViewModels.OnboardingStep1BVM
+@{
+    ViewData["Title"] = "Degree & Semester";
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
+}
+
+<style>
+    canvas#step1bCanvas { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+
+    .auth-card {
+        position: relative; z-index: 10;
+        background: rgba(10,10,32,0.88);
+        border: 1px solid rgba(108,110,245,0.22);
+        border-radius: 24px; padding: 2.4rem 2.2rem;
+        width: 100%; max-width: 440px; margin: auto;
+        backdrop-filter: blur(20px);
+        box-shadow: 0 8px 48px rgba(108,110,245,0.2);
+    }
+
+    body.light-mode .auth-card {
+        background: rgba(255,255,255,0.93);
+        border-color: rgba(75,77,224,0.16);
+    }
+
+    .step-badge {
+        display: inline-flex; align-items: center; gap: 7px;
+        padding: 4px 13px; border-radius: 20px;
+        background: rgba(108,110,245,0.12);
+        border: 1px solid rgba(108,110,245,0.28);
+        font-size: 11.5px; font-weight: 700; color: #6c6ef5;
+        letter-spacing: .8px; text-transform: uppercase;
+        margin-bottom: 1rem;
+    }
+
+    .onboard-title { font-size: 1.6rem; font-weight: 900; color: #e8e8ff; margin-bottom: .4rem; }
+    body.light-mode .onboard-title { color: #0a0a2e; }
+
+    .onboard-sub { font-size: 13.5px; color: #6060a0; margin-bottom: 1.6rem; line-height: 1.6; }
+    body.light-mode .onboard-sub { color: #5555aa; }
+
+    .field-wrap { display: flex; flex-direction: column; margin-bottom: 18px; width: 100%; }
+    .field-label { font-size: 13px; font-weight: 600; color: #8080b0; margin-bottom: 8px; }
+    body.light-mode .field-label { color: #5555aa; }
+
+    .field-select {
+        width: 100%;
+        background: rgba(255,255,255,0.05);
+        border: 1.5px solid rgba(108,110,245,0.2);
+        border-radius: 14px;
+        padding: 14px 16px;
+        font-size: 14.5px; color: #e8e8ff;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        cursor: pointer;
+        transition: border-color .25s;
+    }
+    body.light-mode .field-select { background: rgba(0,0,40,0.04); color: #0a0a2e; }
+    .field-select:focus { border-color: rgba(108,110,245,0.7); outline: none; }
+    .field-select option { background: #0a0a2e; color: #e8e8ff; }
+
+    .semester-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-top: 6px; }
+    .semester-btn {
+        aspect-ratio: 1;
+        display: flex; align-items: center; justify-content: center;
+        background: rgba(108,110,245,0.06);
+        border: 1.5px solid rgba(108,110,245,0.2);
+        border-radius: 12px;
+        font-size: 1.1rem; font-weight: 700; color: #a0a0d0;
+        cursor: pointer; transition: all .2s;
+    }
+    body.light-mode .semester-btn { color: #4040a0; }
+    .semester-btn:hover { border-color: rgba(108,110,245,0.5); transform: translateY(-2px); }
+    .semester-btn.selected {
+        background: linear-gradient(135deg, #6c6ef5, #8840e0);
+        border-color: #6c6ef5; color: #fff;
+        box-shadow: 0 4px 16px rgba(108,110,245,0.4);
+    }
+    .semester-btn.disabled {
+        opacity: .3; cursor: not-allowed; pointer-events: none;
+    }
+
+    .info-box {
+        background: rgba(35,232,200,0.06);
+        border: 1px solid rgba(35,232,200,0.2);
+        border-radius: 12px; padding: 12px 16px;
+        margin-bottom: 18px;
+        font-size: 12.5px; color: #23e8c8;
+        display: flex; align-items: flex-start; gap: 10px;
+    }
+    body.light-mode .info-box { color: #0a8888; }
+
+    .btn-primary {
+        display: flex; align-items: center; justify-content: center; gap: 10px;
+        padding: 14px; border-radius: 50px;
+        font-size: 15px; font-weight: 700;
+        background: linear-gradient(135deg, #5a5cf5, #8840e0, #f056c8);
+        color: #fff; border: none; cursor: pointer;
+        box-shadow: 0 6px 28px rgba(108,110,245,0.4);
+        transition: transform .25s; width: 100%;
+    }
+    .btn-primary:hover { transform: translateY(-2px) scale(1.01); }
+
+    .field-error { color: #f05858; font-size: 12px; margin-top: 4px; }
+</style>
+
+<canvas id="step1bCanvas"></canvas>
+
+<div class="auth-card">
+    <p class="step-badge">Step 1B — Almost There</p>
+    <h2 class="onboard-title">Tell Us About Your Degree</h2>
+    <p class="onboard-sub">
+        This information helps us build a semester-wise career roadmap for you —
+        like when to start your internship or when to begin applying for jobs.
+    </p>
+
+    <div class="info-box">
+        💡 This allows us to guide you at exactly the right time — for example "start looking for an internship now" or "begin your FYP now."
+    </div>
+
+    <form asp-action="Step1B" method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="field-wrap">
+            <label class="field-label">Degree Program</label>
+            <select asp-for="DegreeProgramId" class="field-select" id="programSelect" onchange="updateSemesterLimit()">
+                <option value="">-- Select Program --</option>
+                @foreach (var prog in Model.AvailablePrograms)
+                {
+                    <option value="@prog.ProgramId" data-total="@prog.TotalSemesters">
+                        @prog.ProgramName — @prog.FullName
+                    </option>
+                }
+            </select>
+            <span asp-validation-for="DegreeProgramId" class="field-error"></span>
+        </div>
+
+        <div class="field-wrap">
+            <label class="field-label">Which Semester Are You In?</label>
+            <input type="hidden" asp-for="CurrentSemester" id="semesterInput" />
+            <div class="semester-grid" id="semesterGrid">
+                @for (int i = 1; i <= 8; i++)
+                {
+                    <div class="semester-btn" data-sem="@i" onclick="selectSemester(@i, this)">
+                        @i
+                    </div>
+                }
+            </div>
+            <span asp-validation-for="CurrentSemester" class="field-error"></span>
+        </div>
+
+        <button type="submit" class="btn-primary">Next →</button>
+    </form>
+</div>
+
+<script>
+    function selectSemester(num, el) {
+        if (el.classList.contains('disabled')) return;
+        document.querySelectorAll('.semester-btn').forEach(b => b.classList.remove('selected'));
+        el.classList.add('selected');
+        document.getElementById('semesterInput').value = num;
+    }
+
+    function updateSemesterLimit() {
+        const select = document.getElementById('programSelect');
+        const selectedOption = select.options[select.selectedIndex];
+        const total = parseInt(selectedOption.dataset.total) || 8;
+
+        document.querySelectorAll('.semester-btn').forEach(btn => {
+            const sem = parseInt(btn.dataset.sem);
+            if (sem > total) {
+                btn.classList.add('disabled');
+            } else {
+                btn.classList.remove('disabled');
+            }
+        });
+    }
+
+    (function(){
+        var cv = document.getElementById('step1bCanvas');
+        var ctx = cv.getContext('2d');
+        var W, H, mx = innerWidth/2, my = innerHeight/2, tick = 0;
+        function resize(){ W = cv.width = innerWidth; H = cv.height = innerHeight; }
+        resize();
+        window.addEventListener('resize', resize);
+        document.addEventListener('mousemove', function(e){ mx = e.clientX; my = e.clientY; });
+        var nodes = [];
+        function buildGrid(){
+            nodes = [];
+            var cs = Math.ceil(W/80)+1, rs = Math.ceil(H/80)+1;
+            for (var r=0; r<rs; r++)
+                for (var c=0; c<cs; c++)
+                    nodes.push({ x:c*80, y:r*80, ox:c*80, oy:r*80 });
+        }
+        buildGrid();
+        window.addEventListener('resize', function(){ resize(); buildGrid(); });
+        function frame(){
+            tick += 0.012;
+            ctx.clearRect(0,0,W,H);
+            var cols2 = Math.ceil(W/80)+1;
+            nodes.forEach(function(n){
+                var dx = mx-n.ox, dy = my-n.oy, d = Math.sqrt(dx*dx+dy*dy), p = Math.max(0, 1-d/200);
+                n.x = n.ox + dx*p*0.2 + Math.sin(tick+n.oy*0.03)*2.5;
+                n.y = n.oy + dy*p*0.2 + Math.cos(tick+n.ox*0.03)*2.5;
+            });
+            ctx.strokeStyle = 'rgba(108,110,245,0.06)';
+            ctx.lineWidth = .5;
+            nodes.forEach(function(n,i){
+                var c = i % cols2;
+                if (c < cols2-1 && nodes[i+1]) {
+                    ctx.beginPath(); ctx.moveTo(n.x,n.y); ctx.lineTo(nodes[i+1].x,nodes[i+1].y); ctx.stroke();
+                }
+                if (nodes[i+cols2]) {
+                    ctx.beginPath(); ctx.moveTo(n.x,n.y); ctx.lineTo(nodes[i+cols2].x,nodes[i+cols2].y); ctx.stroke();
+                }
+            });
+            requestAnimationFrame(frame);
+        }
+        frame();
+    })();
+</script>

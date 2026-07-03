@@ -1,0 +1,61 @@
+﻿@model AspiraHub.ViewModels.Career.CareerCompareVM
+@{
+    ViewData["Title"] = "Compare Careers";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="dashboard-page">
+
+    <div class="dash-header">
+        <div class="dash-header-left">
+            <div>
+                <div class="dash-welcome">Career Intelligence</div>
+                <div class="dash-username">Compare Careers</div>
+            </div>
+        </div>
+        <div class="dash-header-right">
+            <a asp-controller="StudentDashboard" asp-action="Index" class="logout-btn">← Dashboard</a>
+        </div>
+    </div>
+
+    <div class="section-block">
+        <form method="post" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+            <select name="careerIdA" class="field-select" style="flex:1; min-width:200px;">
+                <option value="">-- Career A --</option>
+                @foreach (var c in Model.AvailableCareers)
+                {
+                    <option value="@c.CareerId">@c.Title</option>
+                }
+            </select>
+            <span>vs</span>
+            <select name="careerIdB" class="field-select" style="flex:1; min-width:200px;">
+                <option value="">-- Career B --</option>
+                @foreach (var c in Model.AvailableCareers)
+                {
+                    <option value="@c.CareerId">@c.Title</option>
+                }
+            </select>
+            <button type="submit" class="btn-primary-sm">Compare</button>
+        </form>
+    </div>
+
+    @if (Model.CareerA != null && Model.CareerB != null)
+    {
+        <div class="quick-stats">
+            <div class="section-block">
+                <div class="section-title">@Model.CareerA.Title</div>
+                <p>💰 PKR @(Model.CareerA.AvgSalary?.ToString("N0") ?? "N/A")/month</p>
+                <p>📊 Demand: @Model.CareerA.DemandLevel</p>
+                <p>🎯 Match: @Model.CareerA.MatchPercent%</p>
+                <p>🔑 Top Skills: @string.Join(", ", Model.CareerA.TopSkills)</p>
+            </div>
+            <div class="section-block">
+                <div class="section-title">@Model.CareerB.Title</div>
+                <p>💰 PKR @(Model.CareerB.AvgSalary?.ToString("N0") ?? "N/A")/month</p>
+                <p>📊 Demand: @Model.CareerB.DemandLevel</p>
+                <p>🎯 Match: @Model.CareerB.MatchPercent%</p>
+                <p>🔑 Top Skills: @string.Join(", ", Model.CareerB.TopSkills)</p>
+            </div>
+        </div>
+    }
+</div>

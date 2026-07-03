@@ -1,0 +1,59 @@
+﻿@model List<AspiraHub.ViewModels.Job.JobCardVM>
+@{
+    ViewData["Title"] = "Saved Jobs";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="dashboard-page">
+    <div class="dash-header">
+        <div class="dash-header-left">
+            <div>
+                <div class="dash-welcome">Job Portal</div>
+                <div class="dash-username">Saved Jobs</div>
+            </div>
+        </div>
+        <div class="dash-header-right">
+            <a asp-controller="StudentDashboard" asp-action="Index" class="logout-btn">← Dashboard</a>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+            <div class="empty-icon">⭐</div>
+            <p>You haven't saved any jobs yet.</p>
+            <a asp-controller="Job" asp-action="Browse" class="btn-primary-sm">Browse Jobs</a>
+        </div>
+    }
+
+    @foreach (var job in Model)
+    {
+        <div class="job-card">
+            <div class="job-card-left">
+                <div class="job-title">@job.Title</div>
+                <div class="job-company">🏢 @job.CompanyName</div>
+                <div class="job-meta">
+                    @if (!string.IsNullOrEmpty(job.Location))
+                    {
+                        <span>📍 @job.Location</span>
+                    }
+                    @if (job.Deadline.HasValue)
+                    {
+                        <span>⏰ @job.Deadline.Value.ToString("MMM dd")</span>
+                    }
+                </div>
+            </div>
+            <div class="job-card-right">
+                <div class="match-score @(job.MatchScore >= 70 ? "high" : "mid")">@job.MatchScore%</div>
+                @if (job.IsApplied)
+                {
+                    <span class="badge badge-active">Applied</span>
+                }
+                else
+                {
+                    <a asp-controller="Job" asp-action="Browse" class="btn-apply">Go Apply</a>
+                }
+            </div>
+        </div>
+    }
+</div>

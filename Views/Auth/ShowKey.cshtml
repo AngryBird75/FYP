@@ -1,0 +1,56 @@
+﻿@{
+    ViewData["Title"] = "Your Unique Key";
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
+}
+
+<div class="auth-card">
+
+    @Html.Partial("_StepBar", 0)
+
+    <p class="step-badge">Almost Done!</p>
+    <h2 class="auth-card-title">Your Unique Key</h2>
+
+    <div class="key-showcase">
+        <div class="key-glow"></div>
+        <div class="key-icon-big">🔑</div>
+        <p class="key-label">Your Key</p>
+        <div class="key-value" id="theKey">@ViewBag.Key</div>
+        <p class="key-warning">⚠️ Save this key — you will need it to login!</p>
+        <button class="btn btn-outline btn-sm" onclick="copyKey()">
+            📋 Copy Key
+        </button>
+    </div>
+
+    <div class="auth-form">
+        <div class="field-group">
+            <div class="field-icon">👤</div>
+            <input type="text" id="sk_name" class="field-input" placeholder="Full Name" />
+        </div>
+        <div class="field-group">
+            <div class="field-icon">🔒</div>
+            <input type="password" id="sk_pass" class="field-input" placeholder="Create Password" />
+            <button type="button" class="eye-btn" onclick="toggleEye('sk_pass',this)">👁</button>
+        </div>
+        <div class="field-group">
+            <div class="field-icon">🔒</div>
+            <input type="password" id="sk_pass2" class="field-input" placeholder="Confirm Password" />
+            <button type="button" class="eye-btn" onclick="toggleEye('sk_pass2',this)">👁</button>
+        </div>
+    </div>
+
+    <a asp-action="Step1" class="btn btn-primary btn-full">
+        Let's Go 🚀
+    </a>
+
+</div>
+
+@section Scripts {
+    <script>
+        function copyKey() {
+            const key = document.getElementById('theKey').textContent;
+            navigator.clipboard.writeText(key).then(() => {
+                showToast('🔑 Key copied! Save it safely.');
+            });
+        }
+    </script>
+}

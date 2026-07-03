@@ -1,0 +1,570 @@
+﻿@model AspiraHub.ViewModels.LoginVM
+@{
+    ViewData["Title"] = "Admin Login";
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
+}
+
+<style>
+    canvas#adminCanvas {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .auth-card {
+        position: relative;
+        z-index: 10;
+        background: rgba(5,10,20,0.92);
+        border: 1px solid rgba(35,232,200,0.22);
+        border-radius: 24px;
+        padding: 2.4rem 2.2rem;
+        width: 100%;
+        max-width: 420px;
+        margin: auto;
+        backdrop-filter: blur(20px);
+        box-shadow: 0 8px 48px rgba(35,232,200,0.15), inset 0 1px 0 rgba(255,255,255,0.04);
+        animation: cardEntry .6s cubic-bezier(.22,1,.36,1) both;
+    }
+
+    body.light-mode .auth-card {
+        background: rgba(240,255,252,0.95);
+        border-color: rgba(35,232,200,0.3);
+    }
+
+    @@keyframes cardEntry {
+        from {
+            opacity: 0;
+            transform: translateY(32px) scale(.97)
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1)
+        }
+    }
+
+    /* Admin badge */
+    .admin-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 16px;
+        border-radius: 20px;
+        background: rgba(35,232,200,0.1);
+        border: 1px solid rgba(35,232,200,0.3);
+        font-size: 11.5px;
+        font-weight: 800;
+        color: #23e8c8;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        margin-bottom: 1.2rem;
+    }
+
+        .admin-badge::before {
+            content: '';
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #23e8c8;
+            box-shadow: 0 0 10px #23e8c8;
+            animation: adminBlink 1.5s ease-in-out infinite;
+        }
+
+    @@keyframes adminBlink {
+        0%, 100% {
+            opacity: 1;
+            box-shadow: 0 0 10px #23e8c8
+        }
+
+        50% {
+            opacity: .4;
+            box-shadow: 0 0 4px #23e8c8
+        }
+    }
+
+    /* Shield icon */
+    .admin-shield {
+        font-size: 3.5rem;
+        animation: shieldFloat 3s ease-in-out infinite;
+        display: block;
+        text-align: center;
+        margin-bottom: 1rem;
+        filter: drop-shadow(0 0 16px rgba(35,232,200,0.5));
+    }
+
+    @@keyframes shieldFloat {
+        0%, 100% {
+            transform: translateY(0) scale(1)
+        }
+
+        50% {
+            transform: translateY(-6px) scale(1.04)
+        }
+    }
+
+    .onboard-title {
+        font-size: 1.75rem;
+        font-weight: 900;
+        color: #e8e8ff;
+        margin-bottom: .4rem;
+        text-align: center;
+    }
+
+    body.light-mode .onboard-title {
+        color: #0a1a18;
+    }
+
+    .onboard-sub {
+        font-size: 13.5px;
+        color: #406060;
+        margin-bottom: 1.6rem;
+        line-height: 1.6;
+        text-align: center;
+    }
+
+    body.light-mode .onboard-sub {
+        color: #305050;
+    }
+
+    /* Fields — teal theme */
+    .auth-form {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .field-wrap {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 14px;
+        width: 100%;
+    }
+
+    .field-group {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        background: rgba(35,232,200,0.04);
+        border: 1.5px solid rgba(35,232,200,0.18);
+        border-radius: 14px;
+        overflow: hidden;
+        transition: border-color .25s,box-shadow .25s,transform .2s;
+        min-height: 52px;
+    }
+
+    body.light-mode .field-group {
+        background: rgba(35,232,200,0.06);
+    }
+
+    .field-group:focus-within {
+        border-color: rgba(35,232,200,0.7);
+        box-shadow: 0 0 0 3px rgba(35,232,200,0.1), 0 4px 16px rgba(35,232,200,0.12);
+        transform: translateY(-1px);
+    }
+
+    .field-icon {
+        width: 46px;
+        min-width: 46px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        flex-shrink: 0;
+        opacity: .75;
+    }
+
+    .field-input {
+        flex: 1;
+        min-width: 0;
+        width: 100%;
+        background: transparent !important;
+        border: none !important;
+        outline: none !important;
+        padding: .85rem .5rem .85rem 0;
+        font-size: 14.5px;
+        color: #e8e8ff;
+        font-family: 'Segoe UI',system-ui,sans-serif;
+        -webkit-appearance: none;
+        appearance: none;
+        box-shadow: none !important;
+    }
+
+    body.light-mode .field-input {
+        color: #0a1a18;
+    }
+
+    .field-input::placeholder {
+        color: #2a5050;
+        opacity: 1;
+    }
+
+    body.light-mode .field-input::placeholder {
+        color: #508080;
+    }
+
+    .field-input:-webkit-autofill,
+    .field-input:-webkit-autofill:hover,
+    .field-input:-webkit-autofill:focus {
+        -webkit-text-fill-color: #e8e8ff;
+        -webkit-box-shadow: 0 0 0px 1000px rgba(5,10,20,0.95) inset !important;
+        transition: background-color 5000s ease-in-out 0s;
+    }
+
+    body.light-mode .field-input:-webkit-autofill {
+        -webkit-text-fill-color: #0a1a18;
+        -webkit-box-shadow: 0 0 0px 1000px rgba(240,255,252,0.95) inset !important;
+    }
+
+    .eye-btn {
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 0 14px;
+        font-size: 16px;
+        opacity: .7;
+        transition: opacity .2s,transform .2s;
+        flex-shrink: 0;
+        height: 100%;
+        display: flex;
+        align-items: center;
+    }
+
+        .eye-btn:hover {
+            opacity: 1;
+            transform: scale(1.15);
+        }
+
+    .field-error {
+        display: block;
+        font-size: 12px;
+        color: #f05858;
+        padding: 4px 4px 0;
+    }
+
+        .field-error:empty {
+            display: none;
+        }
+
+    .validation-summary-errors {
+        background: rgba(245,80,80,0.1);
+        border: 1px solid rgba(245,80,80,0.3);
+        border-radius: 10px;
+        padding: 10px 14px;
+        margin-bottom: 14px;
+    }
+
+        .validation-summary-errors ul {
+            margin: 0;
+            padding: 0 0 0 16px;
+            color: #f05858;
+            font-size: 13px;
+        }
+
+    /* Security info box */
+    .security-info {
+        background: rgba(35,232,200,0.06);
+        border: 1px solid rgba(35,232,200,0.18);
+        border-radius: 12px;
+        padding: 10px 14px;
+        margin-bottom: 14px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 12.5px;
+        color: #23e8c8;
+    }
+
+    body.light-mode .security-info {
+        background: rgba(35,232,200,0.08);
+        color: #0a8888;
+    }
+
+    /* Login btn — teal */
+    .btn-admin {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 14px;
+        border-radius: 50px;
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: .5px;
+        background: linear-gradient(135deg,#0d9488,#23e8c8,#0891b2);
+        color: #fff;
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 6px 28px rgba(35,232,200,0.3);
+        transition: transform .25s,box-shadow .25s,filter .2s;
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+        text-decoration: none;
+        margin-top: 6px;
+    }
+
+        .btn-admin::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg,rgba(255,255,255,0.14),transparent 55%);
+            border-radius: 50px;
+        }
+
+        .btn-admin:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 12px 38px rgba(35,232,200,0.4);
+            filter: brightness(1.08);
+        }
+
+    .auth-switch {
+        text-align: center;
+        margin-top: 1rem;
+        font-size: 13px;
+        color: #406060;
+    }
+
+    body.light-mode .auth-switch {
+        color: #305050;
+    }
+
+    .link-teal {
+        color: #23e8c8;
+        font-weight: 700;
+        text-decoration: none;
+        transition: color .2s;
+    }
+
+    body.light-mode .link-teal {
+        color: #0a8888;
+    }
+
+    .link-teal:hover {
+        color: #6c6ef5;
+    }
+
+    /* Scan line effect */
+    .scan-line {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg,transparent,#23e8c8,transparent);
+        animation: scanMove 3s ease-in-out infinite;
+        opacity: .5;
+    }
+
+    @@keyframes scanMove {
+        0% {
+            top: 0;
+            opacity: 0
+        }
+
+        10% {
+            opacity: .5
+        }
+
+        90% {
+            opacity: .5
+        }
+
+        100% {
+            top: 100%;
+            opacity: 0
+        }
+    }
+
+    .toast {
+        position: fixed;
+        bottom: 28px;
+        left: 50%;
+        transform: translateX(-50%) translateY(20px);
+        background: rgba(5,10,20,0.95);
+        border: 1px solid rgba(35,232,200,0.35);
+        color: #e8e8ff;
+        padding: 12px 22px;
+        border-radius: 40px;
+        font-size: 13.5px;
+        font-weight: 600;
+        box-shadow: 0 8px 28px rgba(35,232,200,0.2);
+        backdrop-filter: blur(16px);
+        z-index: 9999;
+        animation: toastIn .4s cubic-bezier(.22,1,.36,1) forwards;
+        white-space: nowrap;
+    }
+
+    @@keyframes toastIn {
+        from {
+            opacity: 0;
+            transform: translateX(-50%) translateY(20px)
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0)
+        }
+    }
+
+    .mtrail {
+        position: fixed;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 9999;
+        transform: translate(-50%,-50%);
+        opacity: .8;
+        transition: opacity .6s;
+    }
+</style>
+
+<canvas id="adminCanvas"></canvas>
+
+<div class="auth-card" style="position:relative">
+    <div class="scan-line"></div>
+
+    <div style="text-align:center;margin-bottom:1rem;">
+        <span class="admin-badge">⚙️ Admin Access</span>
+    </div>
+
+    <div class="admin-shield">🛡️</div>
+
+    <h2 class="onboard-title">Admin Login</h2>
+    <p class="onboard-sub">Restricted access — authorized personnel only</p>
+
+    <div class="security-info">
+        🔒 This session will be logged for security purposes
+    </div>
+
+    <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+
+    <form asp-action="AdminLogin" method="post" class="auth-form" id="adminForm">
+        @Html.AntiForgeryToken()
+
+        <div class="field-wrap">
+            <div class="field-group">
+                <div class="field-icon">✉️</div>
+                <input asp-for="LoginIdentifier"
+                       class="field-input"
+                       placeholder="Admin Email"
+                       autocomplete="email" />
+            </div>
+            <span asp-validation-for="LoginIdentifier" class="field-error"></span>
+        </div>
+
+        <div class="field-wrap">
+            <div class="field-group">
+                <div class="field-icon">🔐</div>
+                <input asp-for="Password"
+                       type="password" id="adminPass"
+                       class="field-input"
+                       placeholder="Admin Password"
+                       autocomplete="current-password" />
+                <button type="button" class="eye-btn"
+                        onclick="toggleEye('adminPass','eyeAdmin')">
+                    <span id="eyeAdmin">👁️</span>
+                </button>
+            </div>
+            <span asp-validation-for="Password" class="field-error"></span>
+        </div>
+
+        <button type="submit" class="btn-admin" id="adminSubmit">
+            🛡️ Access Admin Panel
+        </button>
+    </form>
+
+    <p class="auth-switch">
+        <a href="/Auth/Login" class="link-teal">← Back to regular login</a>
+        &nbsp;·&nbsp;
+        <a href="/Auth/Index" class="link-teal">Home</a>
+    </p>
+</div>
+
+<script>
+    (function(){
+        var cv=document.getElementById('adminCanvas');
+        var ctx=cv.getContext('2d');
+        var W,H,mx=innerWidth/2,my=innerHeight/2,tick=0;
+        var isDark=!document.body.classList.contains('light-mode');
+        function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight;}
+        resize();window.addEventListener('resize',resize);
+        document.addEventListener('mousemove',function(e){mx=e.clientX;my=e.clientY;});
+
+        var themeBtn=document.querySelector('.theme-toggle');
+        if(themeBtn)themeBtn.addEventListener('click',function(){setTimeout(function(){isDark=!document.body.classList.contains('light-mode');},50);});
+
+        var parts=[];
+        function sp(x,y,burst){
+            var colors=['#23e8c8','#0d9488','#6c6ef5','#0891b2'];
+            var count=burst?12:1;
+            for(var i=0;i<count;i++){
+                var angle=Math.random()*Math.PI*2,speed=burst?(Math.random()*4+1):(Math.random()*.5+.1);
+                parts.push({x:x||Math.random()*W,y:y||Math.random()*H,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed-(burst?2:0),r:Math.random()*(burst?4:2)+.5,color:colors[Math.floor(Math.random()*colors.length)],life:1,decay:Math.random()*(burst?.025:.006)+.003});
+            }
+            if(parts.length>200)parts.splice(0,parts.length-200);
+        }
+
+        var nodes=[];
+        function buildGrid(){nodes=[];var cs=Math.ceil(W/80)+1,rs=Math.ceil(H/80)+1;for(var r=0;r<rs;r++)for(var c=0;c<cs;c++)nodes.push({x:c*80,y:r*80,ox:c*80,oy:r*80});}
+        buildGrid();window.addEventListener('resize',function(){resize();buildGrid();});
+
+        function frame(){
+            tick+=0.012;ctx.clearRect(0,0,W,H);
+            var cols2=Math.ceil(W/80)+1;
+            var lc=isDark?'rgba(35,232,200,0.06)':'rgba(35,232,200,0.05)';
+            nodes.forEach(function(n){var dx=mx-n.ox,dy=my-n.oy,d=Math.sqrt(dx*dx+dy*dy),p=Math.max(0,1-d/200);n.x=n.ox+dx*p*0.2+Math.sin(tick+n.oy*0.03)*2.5;n.y=n.oy+dy*p*0.2+Math.cos(tick+n.ox*0.03)*2.5;});
+            ctx.strokeStyle=lc;ctx.lineWidth=.5;
+            nodes.forEach(function(n,i){var c=i%cols2;if(c<cols2-1&&nodes[i+1]){ctx.beginPath();ctx.moveTo(n.x,n.y);ctx.lineTo(nodes[i+1].x,nodes[i+1].y);ctx.stroke();}if(nodes[i+cols2]){ctx.beginPath();ctx.moveTo(n.x,n.y);ctx.lineTo(nodes[i+cols2].x,nodes[i+cols2].y);ctx.stroke();}});
+            nodes.forEach(function(n){var dx=mx-n.x,dy=my-n.y,d=Math.sqrt(dx*dx+dy*dy);if(d<130){ctx.beginPath();ctx.arc(n.x,n.y,2.5,0,6.28);ctx.fillStyle='rgba(35,232,200,'+(1-d/130)*.7+')';ctx.fill();}});
+            if(Math.random()<.2)sp();
+            parts.forEach(function(p){p.x+=p.vx;p.y+=p.vy;p.life-=p.decay;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,6.28);ctx.fillStyle=p.color;ctx.globalAlpha=p.life*.5;ctx.fill();});
+            ctx.globalAlpha=1;parts=parts.filter(function(p){return p.life>0;});
+            requestAnimationFrame(frame);
+        }
+        frame();
+
+        window.toggleEye=function(inputId,eyeId){
+            var input=document.getElementById(inputId),eye=document.getElementById(eyeId);
+            if(!input||!eye)return;
+            input.type=input.type==='password'?'text':'password';
+            eye.textContent=input.type==='password'?'👁️':'🙈';
+        };
+
+        // Form submit effect
+        var form=document.getElementById('adminForm');
+        if(form){
+            form.addEventListener('submit',function(){
+                var btn=document.getElementById('adminSubmit');
+                if(btn){
+                    btn.innerHTML='🔄 Verifying...';
+                    btn.style.opacity='.8';
+                }
+            });
+        }
+
+        // Spawn on shield hover
+        var shield=document.querySelector('.admin-shield');
+        if(shield){
+            shield.addEventListener('mouseenter',function(){
+                var r=shield.getBoundingClientRect();
+                sp(r.left+r.width/2,r.top+r.height/2,true);
+            });
+        }
+
+        var tColors=['#23e8c8','#0d9488','#6c6ef5','#0891b2'];
+        var lastT=0;
+        document.addEventListener('mousemove',function(e){
+            var now=Date.now();if(now-lastT<30)return;lastT=now;
+            var d=document.createElement('div');d.className='mtrail';
+            d.style.left=e.clientX+'px';d.style.top=e.clientY+'px';
+            var col=tColors[Math.floor(Math.random()*tColors.length)];
+            d.style.background=col;d.style.boxShadow='0 0 8px '+col;
+            document.body.appendChild(d);
+            setTimeout(function(){d.style.opacity='0';setTimeout(function(){if(d.parentNode)d.remove();},600);},45);
+        });
+    })();
+</script>

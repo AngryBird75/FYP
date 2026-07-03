@@ -1,0 +1,48 @@
+﻿@model List<AspiraHub.ViewModels.Career.CareerCardVM>
+@{
+    ViewData["Title"] = "Saved Careers";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="dashboard-page">
+
+    <div class="dash-header">
+        <div class="dash-header-left">
+            <div>
+                <div class="dash-welcome">Career Intelligence</div>
+                <div class="dash-username">Saved Careers</div>
+            </div>
+        </div>
+        <div class="dash-header-right">
+            <a asp-controller="StudentDashboard" asp-action="Index" class="logout-btn">← Dashboard</a>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+            <div class="empty-icon">❤️</div>
+            <p>You haven't saved any careers yet.</p>
+            <a asp-action="Explore" class="btn-primary-sm">Explore Careers</a>
+        </div>
+    }
+
+    @foreach (var c in Model)
+    {
+        <div class="job-card">
+            <div class="job-card-left">
+                <div class="job-title">@c.Title</div>
+                <div class="job-meta">
+                    <span>💰 PKR @(c.AvgSalary?.ToString("N0") ?? "N/A")/month</span>
+                    <span>• 📊 @c.DemandLevel demand</span>
+                </div>
+            </div>
+            <div class="job-card-right">
+                <div class="match-score @(c.MatchPercent >= 70 ? "high" : c.MatchPercent >= 40 ? "mid" : "low")">
+                    @c.MatchPercent%
+                </div>
+                <a asp-action="SkillGap" asp-route-careerId="@c.CareerId" class="btn-apply">View Gap</a>
+            </div>
+        </div>
+    }
+</div>

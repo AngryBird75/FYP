@@ -1,0 +1,153 @@
+﻿@model AspiraHub.ViewModels.Roadmap.GenerateRoadmapVM
+@{
+    ViewData["Title"] = "Generate Roadmap";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<style>
+    .type-cards {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+    .type-card {
+        border: 1.5px solid var(--border);
+        border-radius: 14px;
+        padding: 16px 12px;
+        text-align: center;
+        cursor: pointer;
+        background: var(--bg-field);
+        transition: .2s;
+    }
+
+        .type-card input {
+            display: none;
+        }
+
+        .type-card .icon {
+            font-size: 1.8rem;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .type-card .name {
+            font-weight: 700;
+            font-size: .88rem;
+        }
+
+        .type-card .desc {
+            font-size: .72rem;
+            color: var(--text-2);
+            margin-top: 4px;
+        }
+
+        .type-card:has(input:checked) {
+            border-color: var(--blue);
+            background: var(--blue-dim);
+            box-shadow: 0 0 0 2px var(--border-blue);
+        }
+
+    .duration-pills {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 18px;
+    }
+
+    .duration-pill {
+        border: 1.5px solid var(--border);
+        border-radius: 20px;
+        padding: 8px 16px;
+        font-size: .82rem;
+        cursor: pointer;
+        background: var(--bg-field);
+    }
+
+        .duration-pill input {
+            display: none;
+        }
+
+        .duration-pill:has(input:checked) {
+            border-color: var(--orange);
+            background: var(--orange-dim);
+            color: var(--orange-lt);
+            font-weight: 700;
+        }
+</style>
+
+<div class="dashboard-page">
+
+    <div class="dash-header">
+        <div class="dash-header-left">
+            <div>
+                <div class="dash-welcome">Roadmap & Progress</div>
+                <div class="dash-username">Generate New Roadmap</div>
+            </div>
+        </div>
+        <div class="dash-header-right">
+            <a asp-action="Index" class="logout-btn">← Back</a>
+        </div>
+    </div>
+
+    <div class="auth-card" style="max-width:560px; margin:0;">
+        <div asp-validation-summary="All" class="alert alert-error"></div>
+
+        <form asp-action="Generate" method="post" class="auth-form">
+            @Html.AntiForgeryToken()
+
+            <div class="field-wrap">
+                <label class="field-label">Choose a Career Goal</label>
+                <select asp-for="CareerId" class="field-select">
+                    <option value="">-- Select Career --</option>
+                    @foreach (var c in Model.AvailableCareers)
+                    {
+                        <option value="@c.CareerId">@c.Title</option>
+                    }
+                </select>
+            </div>
+
+            <div class="field-wrap">
+                <label class="field-label">Roadmap Type — teeno alag hain, apni zaroorat ke hisaab se create karein</label>
+                <div class="type-cards">
+                    <label class="type-card">
+                        <input type="radio" asp-for="RoadmapType" value="Career" />
+                        <span class="icon">💼</span>
+                        <span class="name">Career</span>
+                        <span class="desc">Sirf job/skill focused</span>
+                    </label>
+                    <label class="type-card">
+                        <input type="radio" asp-for="RoadmapType" value="Education" />
+                        <span class="icon">🎓</span>
+                        <span class="name">Education</span>
+                        <span class="desc">Sirf academic/degree focused</span>
+                    </label>
+                    <label class="type-card">
+                        <input type="radio" asp-for="RoadmapType" value="Mixed" checked />
+                        <span class="icon">🚀</span>
+                        <span class="name">Mixed</span>
+                        <span class="desc">Dono sath sath</span>
+                    </label>
+                </div>
+                <span asp-validation-for="RoadmapType" class="field-error"></span>
+            </div>
+
+            <div class="field-wrap">
+                <label class="field-label">How much time do you have? (target duration)</label>
+                <div class="duration-pills">
+                    @foreach (var m in new[] { 3, 6, 9, 12, 18, 24 })
+                    {
+                        <label class="duration-pill">
+                            <input type="radio" asp-for="DurationMonths" value="@m" checked="@(m == 6)" />
+                            @m Months
+                        </label>
+                    }
+                </div>
+                <span asp-validation-for="DurationMonths" class="field-error"></span>
+            </div>
+
+            <button type="submit" class="btn-primary">Generate Roadmap →</button>
+        </form>
+    </div>
+</div>

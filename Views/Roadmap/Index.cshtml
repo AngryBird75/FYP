@@ -1,0 +1,94 @@
+﻿@model AspiraHub.ViewModels.Roadmap.RoadmapListVM
+@{
+    ViewData["Title"] = "My Roadmaps";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="dashboard-page">
+
+    <div class="dash-header">
+        <div class="dash-header-left">
+            <div>
+                <div class="dash-welcome">Roadmap & Progress</div>
+                <div class="dash-username">My Roadmaps</div>
+            </div>
+        </div>
+        <div class="dash-header-right">
+            <a asp-action="Generate" class="btn-primary-sm">+ New Roadmap</a>
+            <a asp-controller="StudentDashboard" asp-action="Index" class="logout-btn">← Dashboard</a>
+        </div>
+    </div>
+
+    @if (!Model.Roadmaps.Any())
+    {
+        <div class="empty-state">
+            <div class="empty-icon">🗺️</div>
+            <p>You don't have any roadmaps yet.</p>
+            <a asp-action="Generate" class="btn-primary-sm">Create Your First Roadmap</a>
+        </div>
+    }
+
+    @foreach (var r in Model.Roadmaps)
+    {
+        <div class="section-block">
+            <div class="section-header-row">
+                <div class="section-title">@r.Title</div>
+                <span class="badge @(r.Status == "Active" ? "badge-active" : r.Status == "Completed" ? "badge-type" : "badge-pending")">
+                    @r.Status
+                </span>
+            </div>
+
+            <div class="progress-wrap">
+                <div class="progress-label">
+                    @r.CompletedSteps / @r.TotalSteps steps completed
+                    <span class="progress-pct">@r.ProgressPercent%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width:@r.ProgressPercent%"></div>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
+                <a asp-action="Detail" asp-route-id="@r.RoadmapId" class="tbl-btn green">View Details</a>
+
+                @if (r.Status == "Active")
+                {
+                    <button class="tbl-btn" onclick="pauseRoadmap(@r.RoadmapId)">Pause</button>
+                }
+                else if (r.Status == "Paused")
+                {
+                    <button class="tbl-btn green" onclick="resumeRoadmap(@r.RoadmapId)">Resume</button>
+                }
+
+                <button class="tbl-btn red" onclick="deleteRoadmap(@r.RoadmapId)">Delete</button>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function pauseRoadmap(id) {
+            fetch('/Roadmap/Pause', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `roadmapId=${id}`
+            }).then(r => r.json()).then(d => { if (d.success) location.reload(); });
+        }
+        function resumeRoadmap(id) {
+            fetch('/Roadmap/Resume', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `roadmapId=${id}`
+            }).then(r => r.json()).then(d => { if (d.success) location.reload(); });
+        }
+        function deleteRoadmap(id) {
+            if (!confirm('Are you sure you want to delete this roadmap?')) return;
+            fetch('/Roadmap/Delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `roadmapId=${id}`
+            }).then(r => r.json()).then(d => { if (d.success) location.reload(); });
+        }
+    </script>
+}

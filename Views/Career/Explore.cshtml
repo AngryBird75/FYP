@@ -1,0 +1,89 @@
+﻿@model AspiraHub.ViewModels.Career.CareerExploreVM
+@{
+    ViewData["Title"] = "Explore Careers";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="dashboard-page">
+
+    <div class="dash-header">
+        <div class="dash-header-left">
+            <div>
+                <div class="dash-welcome">Career Intelligence</div>
+                <div class="dash-username">Explore Careers</div>
+            </div>
+        </div>
+        <div class="dash-header-right">
+            <a asp-controller="StudentDashboard" asp-action="Index" class="logout-btn">← Dashboard</a>
+        </div>
+    </div>
+
+    <div class="section-block">
+        <form method="get" style="display:flex; gap:10px; flex-wrap:wrap;">
+            <input type="text" name="search" value="@Model.SearchTerm"
+                   placeholder="Search careers..." class="field-select" style="flex:1; min-width:200px;" />
+            <select name="demand" class="field-select" style="width:160px;">
+                <option value="">All Demand Levels</option>
+                <option value="High" selected="@(Model.FilterDemand == "High")">High</option>
+                <option value="Medium" selected="@(Model.FilterDemand == "Medium")">Medium</option>
+                <option value="Low" selected="@(Model.FilterDemand == "Low")">Low</option>
+            </select>
+            <button type="submit" class="btn-primary-sm">Search</button>
+        </form>
+    </div>
+
+    @if (!Model.Careers.Any())
+    {
+        <div class="empty-state">
+            <div class="empty-icon">🔭</div>
+            <p>No careers found. Try a different search.</p>
+        </div>
+    }
+
+    @foreach (var c in Model.Careers)
+    {
+        <div class="job-card">
+            <div class="job-card-left">
+                <div class="job-title">@c.Title</div>
+                <div class="job-meta">
+                    @if (c.AvgSalary.HasValue)
+                    {
+                        <span>💰 PKR @c.AvgSalary.Value.ToString("N0")/month</span>
+                    }
+                    <span>• 📊 @c.DemandLevel demand</span>
+                    <span>• 📈 @c.JobMarketTrend</span>
+                </div>
+                <div style="font-size:.82rem; color:var(--text-2); margin-top:6px;">
+                    @c.Description
+                </div>
+            </div>
+            <div class="job-card-right">
+                <div class="match-score @(c.MatchPercent >= 70 ? "high" : c.MatchPercent >= 40 ? "mid" : "low")">
+                    @c.MatchPercent%
+                </div>
+                <div class="match-label">Match</div>
+                <a asp-action="SkillGap" asp-route-careerId="@c.CareerId" class="btn-apply">
+                    View Gap
+                </a>
+                <button class="tbl-btn @(c.IsSaved ? "red" : "green")"
+                        onclick="toggleSave(@c.CareerId, @(c.IsSaved ? "true" : "false"), this)">
+                    @(c.IsSaved ? "Unsave" : "Save")
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function toggleSave(careerId, isSaved, btn) {
+            fetch('/Career/ToggleSave', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `careerId=${careerId}&isSaved=${isSaved}`
+            }).then(r => r.json()).then(d => {
+                if (d.success) location.reload();
+            });
+        }
+    </script>
+}

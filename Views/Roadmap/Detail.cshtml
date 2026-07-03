@@ -1,0 +1,415 @@
+﻿@using AspiraHub.Models
+@model AspiraHub.ViewModels.Roadmap.RoadmapDetailVM
+@{
+    ViewData["Title"] = "Roadmap Detail";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+
+    var activePhase = Model.Phases.FirstOrDefault(p => p.PhaseStatus == "Active");
+    var nextStep = activePhase?.Steps.FirstOrDefault(s => s.ProgressStatus != RoadmapStatus.Completed);
+}
+
+<style>
+    .journey-strip {
+        display: flex;
+        align-items: flex-start;
+        overflow-x: auto;
+        gap: 0;
+        padding: 6px 2px 10px;
+    }
+
+    .journey-node {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 92px;
+        flex-shrink: 0;
+        text-align: center;
+        cursor: pointer;
+    }
+
+    .journey-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        background: var(--bg-field);
+        border: 2px solid var(--border);
+        color: var(--text-3);
+        transition: .2s;
+    }
+
+    .journey-node.completed .journey-circle {
+        background: var(--blue-dim);
+        border-color: var(--blue);
+        color: var(--blue-lt);
+    }
+
+    .journey-node.active .journey-circle {
+        background: linear-gradient(135deg, var(--blue), var(--orange));
+        border-color: var(--orange);
+        color: #fff;
+        box-shadow: 0 0 0 4px var(--orange-dim);
+    }
+
+    .journey-node.locked .journey-circle {
+        opacity: .5;
+    }
+
+    .journey-label {
+        font-size: .68rem;
+        margin-top: 6px;
+        color: var(--text-2);
+        max-width: 90px;
+        line-height: 1.2;
+    }
+
+    .journey-node.active .journey-label {
+        color: var(--text);
+        font-weight: 700;
+    }
+
+    .journey-line {
+        height: 2px;
+        flex: 1;
+        min-width: 24px;
+        background: var(--border);
+        margin-top: 19px;
+    }
+
+        .journey-line.done {
+            background: var(--blue);
+        }
+
+    .next-step-card {
+        background: linear-gradient(135deg, var(--blue-dim), var(--orange-dim));
+        border: 1px solid var(--border-blue);
+        border-radius: 16px;
+        padding: 18px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        flex-wrap: wrap;
+    }
+
+    .next-step-label {
+        font-size: .7rem;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        color: var(--text-2);
+        margin-bottom: 4px;
+    }
+
+    .next-step-title {
+        font-size: 1.05rem;
+        font-weight: 800;
+    }
+
+    .next-step-desc {
+        font-size: .82rem;
+        color: var(--text-2);
+        margin-top: 4px;
+        max-width: 480px;
+    }
+
+    .next-step-btn {
+        background: var(--blue);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 10px 18px;
+        font-weight: 700;
+        font-size: .85rem;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+        .next-step-btn:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+
+    .all-done-card {
+        text-align: center;
+        padding: 24px;
+        font-weight: 700;
+        color: var(--blue-lt);
+    }
+
+    .phase-locked-msg {
+        font-size: .82rem;
+        color: var(--text-3);
+        padding: 6px 0;
+    }
+
+    .phase-summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+    }
+
+    .phase-count-badge {
+        font-size: .74rem;
+        color: var(--text-2);
+        background: var(--bg-field);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 3px 10px;
+        white-space: nowrap;
+    }
+
+    .phase-desc-text {
+        font-size: .8rem;
+        color: var(--text-2);
+        margin: -8px 0 14px;
+    }
+
+    #step-error-toast {
+        display: none;
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #f87171;
+        color: #fff;
+        padding: 10px 18px;
+        border-radius: 10px;
+        font-size: .82rem;
+        font-weight: 600;
+        z-index: 999;
+        box-shadow: 0 6px 20px rgba(0,0,0,.3);
+    }
+</style>
+
+<div class="dashboard-page">
+
+    <div class="dash-header">
+        <div class="dash-header-left">
+            <div>
+                <div class="dash-welcome">Roadmap & Progress</div>
+                <div class="dash-username">@Model.Title</div>
+            </div>
+        </div>
+        <div class="dash-header-right">
+            <a asp-action="Index" class="logout-btn">← Back</a>
+        </div>
+    </div>
+
+    <div class="profile-card">
+        <div class="profile-card-sub" style="margin-bottom:10px;">
+            ⏳ Target: @Model.DurationMonths months
+            @if (Model.TargetEndDate.HasValue)
+            {
+                <text> — by @Model.TargetEndDate.Value.ToString("MMM yyyy")</text>
+                @if (Model.DaysRemaining.HasValue)
+                {
+                    <text> (@(Model.DaysRemaining >= 0 ? Model.DaysRemaining + " days left" : "overdue"))</text>
+                }
+            }
+        </div>
+
+        <div class="progress-wrap">
+            <div class="progress-label">
+                Overall Progress
+                <span class="progress-pct">@Model.ProgressPercent%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width:@Model.ProgressPercent%"></div>
+            </div>
+        </div>
+
+        <div class="journey-strip">
+            @for (int i = 0; i < Model.Phases.Count; i++)
+            {
+                var p = Model.Phases[i];
+                string cls = p.PhaseStatus == "Completed" ? "completed" : p.PhaseStatus == "Active" ? "active" : "locked";
+                <div class="journey-node @cls" onclick="document.getElementById('phase-@i').scrollIntoView({behavior:'smooth'})">
+                    <div class="journey-circle">@(p.PhaseStatus == "Completed" ? "✓" : p.Icon)</div>
+                    <div class="journey-label">@p.PhaseName</div>
+                </div>
+                if (i < Model.Phases.Count - 1)
+                {
+                    <div class="journey-line @(p.PhaseStatus == "Completed" ? "done" : "")"></div>
+                }
+            }
+        </div>
+    </div>
+
+    @if (nextStep != null)
+    {
+        <div class="next-step-card">
+            <div>
+                <div class="next-step-label">👉 Your Next Step</div>
+                <div class="next-step-title">@nextStep.StepTitle</div>
+                @if (!string.IsNullOrEmpty(nextStep.Description))
+                {
+                    <div class="next-step-desc">@nextStep.Description</div>
+                }
+            </div>
+            <button class="next-step-btn" id="nextStepBtn"
+                    onclick="updateStep(@nextStep.StepId, '@RoadmapStatus.InProgress', this)">
+                Start This Step
+            </button>
+        </div>
+    }
+    else
+    {
+        <div class="next-step-card all-done-card">🎉 Sab phases complete! Aapki roadmap poori ho chuki hai.</div>
+    }
+
+    @for (int i = 0; i < Model.Phases.Count; i++)
+    {
+        var phase = Model.Phases[i];
+        <div class="section-block" id="phase-@i" style="opacity:@(phase.PhaseStatus == "Locked" ? "0.55" : "1")">
+
+            <div class="phase-summary">
+                <div class="section-title">
+                    @phase.Icon&nbsp;@phase.PhaseName
+                </div>
+                <span class="phase-count-badge">
+                    @if (phase.PhaseStatus == "Locked")
+                    {
+                        <text>🔒 Locked</text>
+                    }
+                    else
+                    {
+                        <text>@phase.CompletedSteps / @phase.TotalSteps done</text>
+                        @if (phase.TargetDate.HasValue)
+                        {
+                            <text> · by @phase.TargetDate.Value.ToString("MMM d")</text>
+                        }
+                    }
+                </span>
+            </div>
+
+            @if (!string.IsNullOrEmpty(phase.Description))
+            {
+                <div class="phase-desc-text">@phase.Description</div>
+            }
+
+            @if (phase.PhaseStatus == "Locked")
+            {
+                <div class="phase-locked-msg">Pichla phase complete karo, ye khud-ba-khud unlock ho jayega.</div>
+            }
+            else if (phase.PhaseStatus == "Completed")
+            {
+                <details>
+                    <summary style="cursor:pointer;font-size:.82rem;color:var(--blue-lt);">View completed steps</summary>
+                    @foreach (var step in phase.Steps)
+                    {
+                        <div class="job-card" style="align-items:flex-start;margin-top:10px;">
+                            <div class="job-card-left">
+                                <div class="job-title">✓ @step.StepOrder. @step.StepTitle</div>
+                            </div>
+                            <div class="job-card-right" style="flex-direction:row;gap:8px;">
+                                <button type="button" class="btn-primary" style="font-size:.72rem;padding:6px 10px;"
+                                        onclick="showResources(@step.StepId)">
+                                    Details
+                                </button>
+                                <span style="font-size:.78rem;color:var(--blue-lt);">Completed — locked</span>
+                            </div>
+                        </div>
+                    }
+                </details>
+            }
+            else
+            {
+                @foreach (var step in phase.Steps)
+                {
+                    <div class="job-card" style="align-items:flex-start;">
+                        <div class="job-card-left">
+                            <div class="job-title">@step.StepOrder. @step.StepTitle</div>
+                            @if (!string.IsNullOrEmpty(step.Description))
+                            {
+                                <div style="font-size:.82rem; color:var(--text-2); margin-top:6px;">@step.Description</div>
+                            }
+                            @if (!string.IsNullOrEmpty(step.ResourceUrl))
+                            {
+                                <a href="@step.ResourceUrl" target="_blank" style="font-size:.78rem; color:var(--blue-lt);">🔗 View Resource</a>
+                            }
+                        </div>
+                        <div class="job-card-right" style="flex-direction:row;gap:8px;">
+                            <button type="button" class="btn-primary" style="font-size:.72rem;padding:6px 10px;"
+                                    onclick="showResources(@step.StepId)">
+                                Details
+                            </button>
+                            @if (step.ProgressStatus == RoadmapStatus.Completed)
+                            {
+                                <span style="font-size:.78rem;color:var(--blue-lt);">✓ Completed — locked</span>
+                            }
+                            else
+                            {
+                                <select class="field-select" style="font-size:.78rem; padding:6px 10px;"
+                                        onchange="updateStep(@step.StepId, this.value, this)">
+                                    <option value="@RoadmapStatus.Pending" selected="@(step.ProgressStatus == RoadmapStatus.Pending)">Pending</option>
+                                    <option value="@RoadmapStatus.InProgress" selected="@(step.ProgressStatus == RoadmapStatus.InProgress)">In Progress</option>
+                                    <option value="@RoadmapStatus.Completed" selected="@(step.ProgressStatus == RoadmapStatus.Completed)">Completed</option>
+                                </select>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    }
+
+</div>
+
+<div id="step-error-toast"></div>
+
+<div id="resourceModalOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:998;" onclick="closeResources(event)">
+    <div style="max-width:520px;margin:60px auto;background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:22px;max-height:75vh;overflow-y:auto;" onclick="event.stopPropagation()">
+        <div id="resourceModalBody">Loading...</div>
+        <button onclick="closeResources()" class="logout-btn" style="margin-top:14px;">Close</button>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function updateStep(stepId, status, el) {
+            if (el) el.disabled = true;
+
+            fetch('/Roadmap/UpdateStep', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `stepId=${stepId}&status=${encodeURIComponent(status)}`
+            })
+            .then(r => r.json())
+            .then(d => {
+                if (d.success) {
+                    location.reload();
+                } else {
+                    if (el) el.disabled = false;
+                    showToast('Could not update — complete the previous phase first, or this step is already locked.');
+                }
+            })
+            .catch(() => {
+                if (el) el.disabled = false;
+                showToast('Something went wrong. Please try again.');
+            });
+        }
+
+        function showToast(msg) {
+            var t = document.getElementById('step-error-toast');
+            t.textContent = msg;
+            t.style.display = 'block';
+            setTimeout(function () { t.style.display = 'none'; }, 3500);
+        }
+
+        function showResources(stepId) {
+            document.getElementById('resourceModalOverlay').style.display = 'block';
+            document.getElementById('resourceModalBody').innerHTML = 'Loading...';
+            fetch('/Roadmap/StepResources?stepId=' + stepId)
+                .then(r => r.text())
+                .then(html => { document.getElementById('resourceModalBody').innerHTML = html; });
+        }
+
+        function closeResources(e) {
+            document.getElementById('resourceModalOverlay').style.display = 'none';
+        }
+    </script>
+}

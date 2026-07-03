@@ -1,0 +1,17 @@
+﻿@model int
+@{
+    int current = Model;
+    int total = 5;
+}
+
+<div class="step-progress">
+    @for (int i = 0; i < total; i++)
+    {
+        string cls = i < current ? "done" : (i == current ? "active" : "");
+        <div class="sp-dot @cls"></div>
+        if (i < total - 1)
+        {
+            <div class="sp-line @(i < current ? "done" : "")"></div>
+        }
+    }
+</div>

@@ -1,0 +1,173 @@
+﻿@model AspiraHub.ViewModels.OnboardingStep3VM
+@{
+    ViewData["Title"] = "Your Skills";
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
+    var catalog = (List<string>)ViewBag.SkillCatalog;
+}
+<style>
+    
+</style>
+
+<canvas id="stepBg"></canvas>
+<div class="floaters" id="floaters"></div>
+
+<div class="orbit-tr">
+    <svg viewBox="0 0 340 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="170" cy="170" r="150" stroke="rgba(35,232,200,0.1)" stroke-width="1" stroke-dasharray="7 6" />
+        <circle cx="170" cy="170" r="105" stroke="rgba(108,110,245,0.08)" stroke-width="1" stroke-dasharray="4 8" />
+        <circle cx="170" cy="20" r="6" fill="#23e8c8" opacity=".5" />
+        <circle cx="320" cy="170" r="5" fill="#6c6ef5" opacity=".4" />
+        <text x="158" y="28" font-size="14" opacity=".5">⚡</text>
+        <text x="308" y="178" font-size="12" opacity=".4">💻</text>
+    </svg>
+</div>
+<div class="orbit-bl">
+    <svg viewBox="0 0 280 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="140" cy="140" r="120" stroke="rgba(35,232,200,0.08)" stroke-width="1" stroke-dasharray="5 7" />
+        <circle cx="140" cy="140" r="75" stroke="rgba(108,110,245,0.07)" stroke-width="1" stroke-dasharray="3 6" />
+        <circle cx="140" cy="20" r="5" fill="#23e8c8" opacity=".35" />
+        <text x="128" y="28" font-size="13" opacity=".4">🎯</text>
+    </svg>
+</div>
+
+<div class="edu-banner">
+    <div class="banner-track" id="bannerTrack"></div>
+</div>
+
+<div class="auth-card onboarding-card">
+
+    @Html.Partial("_StepBar", 3)
+
+    <div class="step-prog">
+        <div class="prog-dot done"></div>
+        <div class="prog-dot done"></div>
+        <div class="prog-dot active"></div>
+        <div class="prog-dot"></div>
+        <div class="prog-dot"></div>
+    </div>
+
+    <p class="step-badge">⚡ Step 3 of 5</p>
+    <h2 class="onboard-title">What <span>skills</span> do you have?</h2>
+    <p class="onboard-sub">Sirf recognized skills add ki ja sakti hain — type karte hi suggestions dikhengi</p>
+
+    <form asp-action="Step3" method="post" class="auth-form">
+        @Html.AntiForgeryToken()
+
+        <div id="skills-list" class="skills-list">
+            <div class="skills-empty" id="emptyState">✨ No skills added yet — add your first one!</div>
+        </div>
+
+        <div class="skill-input-row">
+            <div class="field-group skill-name-field">
+                <div class="field-icon">⚡</div>
+                <input type="text" id="skillNameInput" class="field-input" list="skillCatalogList"
+                       placeholder="Type to search a skill (e.g. Python, Design)"
+                       onkeydown="if(event.key==='Enter'){event.preventDefault();addSkill();}" />
+                <datalist id="skillCatalogList">
+                    @foreach (var s in catalog)
+                    {
+                        <option value="@s"></option>
+                    }
+                </datalist>
+            </div>
+            <select id="skillLevelInput" class="field-input skill-level-select">
+                <option value="">Level</option>
+                <option value="Beginner">Beginner</option>
+                <option value="Intermediate">Intermediate</option>
+                <option value="Advanced">Advanced</option>
+            </select>
+            <button type="button" onclick="addSkill()" class="btn-add">+ Add</button>
+        </div>
+
+        <p id="skill-error" class="field-error" style="display:none;"></p>
+
+        <div id="hidden-skills"></div>
+
+        <button type="submit" class="btn btn-primary btn-full" onclick="return validateSkills()">
+            Continue →
+        </button>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        /* ... aapke original canvas / floaters / banner / particles scripts
+           bilkul waise hi rahenge, sirf neeche skills-logic change hui hai ... */
+
+        /* SKILLS LOGIC — ab sirf catalog se match hone wali skill hi add hogi */
+        var skills = [];
+        var VALID_SKILLS = @Html.Raw(JsonConvert.SerializeObject(catalog.Select(s => s.ToLower())));
+
+        function addSkill(){
+            var nameInput = document.getElementById('skillNameInput');
+            var name = nameInput.value.trim();
+            var level = document.getElementById('skillLevelInput').value;
+            var err = document.getElementById('skill-error');
+
+            if(!name || !level){
+                err.style.display='block';
+                err.textContent='Please enter skill name and select level.';
+                return;
+            }
+
+            // 🔒 MAIN VALIDATION: catalog ke bahar ki koi bhi skill reject
+            if (VALID_SKILLS.indexOf(name.toLowerCase()) === -1){
+                err.style.display='block';
+                err.textContent = '"' + name + '" is not a recognized skill. Please pick a suggestion from the list.';
+                return;
+            }
+
+            if (skills.some(function(s){ return s.name.toLowerCase() === name.toLowerCase(); })){
+                err.style.display='block';
+                err.textContent='This skill is already added.';
+                return;
+            }
+
+            err.style.display='none';
+            skills.push({name:name,level:level});
+            renderSkills();
+            nameInput.value='';
+            document.getElementById('skillLevelInput').value='';
+            nameInput.focus();
+        }
+
+        function removeSkill(i){
+            skills.splice(i,1);
+            renderSkills();
+        }
+
+        function renderSkills(){
+            var list=document.getElementById('skills-list');
+            var hidden=document.getElementById('hidden-skills');
+            list.innerHTML='';
+            hidden.innerHTML='';
+            if(skills.length===0){
+                list.innerHTML='<div class="skills-empty" id="emptyState">✨ No skills added yet — add your first one!</div>';
+                return;
+            }
+            skills.forEach(function(s,i){
+                var row=document.createElement('div');
+                row.className='skill-row';
+                row.innerHTML=
+                    '<div class="skill-row-left">'+
+                        '<span class="skill-row-name">⚡ '+s.name+'</span>'+
+                        '<span class="skill-level-badge badge-'+s.level+'">'+s.level+'</span>'+
+                    '</div>'+
+                    '<button type="button" class="btn-remove" onclick="removeSkill('+i+')">✕</button>';
+                list.appendChild(row);
+                hidden.innerHTML+=
+                    '<input type="hidden" name="Skills['+i+'].SkillName" value="'+s.name+'"/>'+
+                    '<input type="hidden" name="Skills['+i+'].SkillLevel" value="'+s.level+'"/>';
+            });
+        }
+
+        function validateSkills(){
+            if(skills.length===0){
+                document.getElementById('skill-error').style.display='block';
+                document.getElementById('skill-error').textContent='Please add at least one skill.';
+                return false;
+            }
+            return true;
+        }
+    </script>
+}
