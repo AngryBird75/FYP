@@ -31,7 +31,7 @@ public DbSet<InstituteCourse> InstituteCourses { get; set; }
         public DbSet<DegreeProgram> DegreePrograms { get; set; }
         public DbSet<SemesterMilestone> SemesterMilestones { get; set; }
         // Add to existing AppDbContext class
-
+        public DbSet<UniversitySuggestion> UniversitySuggestions { get; set; }
         public DbSet<CareerSkill> CareerSkills { get; set; }
         public DbSet<SkillGapAnalysis> SkillGapAnalyses { get; set; }
         public DbSet<CareerComparison> CareerComparisons { get; set; }
@@ -41,8 +41,10 @@ public DbSet<InstituteCourse> InstituteCourses { get; set; }
         public DbSet<University> Universities { get; set; }
         public DbSet<PasswordReset> PasswordResets { get; set; }
         public DbSet<CourseSkill> CourseSkills { get; set; }
-        public DbSet<ProgramSkill> ProgramSkills { get; set; }
-        public DbSet<InstituteLocation> InstituteLocations { get; set; }
+        public DbSet<ChatMessage> ChatMessages { get; set; }
+        public DbSet<ContactMessage> ContactMessages { get; set; }
+        public DbSet<DirectMessage> DirectMessages { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -118,39 +120,6 @@ public DbSet<InstituteCourse> InstituteCourses { get; set; }
                 .HasOne(ss => ss.User)
                 .WithMany()
                 .HasForeignKey(ss => ss.student_id)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            // CourseSkill — accurate Course <-> Skill link (replaces text-search matching)
-            modelBuilder.Entity<CourseSkill>()
-                .HasOne(cs => cs.Course)
-                .WithMany(c => c.CourseSkills)
-                .HasForeignKey(cs => cs.course_id)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<CourseSkill>()
-                .HasOne(cs => cs.Skill)
-                .WithMany()
-                .HasForeignKey(cs => cs.skill_id)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            // ProgramSkill — which skills belong to which degree program/department
-            modelBuilder.Entity<ProgramSkill>()
-                .HasOne(ps => ps.Program)
-                .WithMany()
-                .HasForeignKey(ps => ps.program_id)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<ProgramSkill>()
-                .HasOne(ps => ps.Skill)
-                .WithMany()
-                .HasForeignKey(ps => ps.skill_id)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            // StudentProfile -> University (validated dropdown selection, Step2)
-            modelBuilder.Entity<StudentProfile>()
-                .HasOne(s => s.University)
-                .WithMany()
-                .HasForeignKey(s => s.university_id)
                 .OnDelete(DeleteBehavior.NoAction);
         }
     }

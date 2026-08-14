@@ -23,6 +23,9 @@ namespace AspiraHub.Controllers
         {
             if (!IsStudent()) return RedirectToAction("Login", "Auth");
 
+            if (await IsGraduateStudent())
+                return View("ComingSoon");
+
             int studentId = await GetStudentId();
             var vm = await _roadmap.GetMyRoadmapsAsync(studentId);
             return View(vm);
@@ -34,9 +37,16 @@ namespace AspiraHub.Controllers
         {
             if (!IsStudent()) return RedirectToAction("Login", "Auth");
 
+            if (await IsGraduateStudent())
+                return View("ComingSoon");
+
+            int studentId = await GetStudentId();
+            var careers = await _roadmap.GetCareerOptionsAsync(studentId);
+
             var vm = new GenerateRoadmapVM
             {
-                AvailableCareers = await _roadmap.GetCareerOptionsAsync()
+                AvailableCareers = careers,
+                ShowingUnfilteredCareers = !careers.Any(c => c.MatchesYourInterests)
             };
             return View(vm);
         }
@@ -46,13 +56,20 @@ namespace AspiraHub.Controllers
         {
             if (!IsStudent()) return RedirectToAction("Login", "Auth");
 
-            vm.AvailableCareers = await _roadmap.GetCareerOptionsAsync();
+            if (await IsGraduateStudent())
+                return View("ComingSoon");
 
-            if (vm.CareerId == 0)
+            int studentId = await GetStudentId();
+
+            if (studentId == 0)
             {
-                ModelState.AddModelError("CareerId", "Please select a career.");
+                vm.AvailableCareers = await _roadmap.GetCareerOptionsAsync(0);
+                ModelState.AddModelError("", "Student profile not found. Please complete your profile first.");
                 return View(vm);
             }
+
+            vm.AvailableCareers = await _roadmap.GetCareerOptionsAsync(studentId);
+            vm.ShowingUnfilteredCareers = !vm.AvailableCareers.Any(c => c.MatchesYourInterests);
 
             if (vm.RoadmapType is not ("Career" or "Education" or "Mixed"))
             {
@@ -60,17 +77,18 @@ namespace AspiraHub.Controllers
                 return View(vm);
             }
 
-            if (!AllowedDurations.Contains(vm.DurationMonths))
+            // A career goal is required for Career/Mixed roadmaps, but an
+            // Education-only roadmap is allowed to have none selected —
+            // this matches what the form's JS already allows.
+            if (vm.CareerId == 0 && vm.RoadmapType != "Education")
             {
-                ModelState.AddModelError("DurationMonths", "Please select a valid duration.");
+                ModelState.AddModelError("CareerId", "Please select a career.");
                 return View(vm);
             }
 
-            int studentId = await GetStudentId();
-
-            if (studentId == 0)
+            if (!AllowedDurations.Contains(vm.DurationMonths))
             {
-                ModelState.AddModelError("", "Student profile not found. Please complete your profile first.");
+                ModelState.AddModelError("DurationMonths", "Please select a valid duration.");
                 return View(vm);
             }
 
@@ -180,6 +198,19 @@ namespace AspiraHub.Controllers
                 .FirstOrDefaultAsync(s => s.user_id == userId);
 
             return profile?.student_id ?? 0;
+        }
+
+        private async Task<bool> IsGraduateStudent()
+        {
+            int userId = GetUserId();
+            if (userId == 0) return false;
+
+            var educationLevel = await _db.StudentProfiles
+                .Where(s => s.user_id == userId)
+                .Select(s => s.education_level)
+                .FirstOrDefaultAsync();
+
+            return educationLevel == "Graduate";
         }
     }
 }
